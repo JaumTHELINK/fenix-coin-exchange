@@ -62,6 +62,8 @@ const Register = () => {
     name: "", email: "", phone: "", cpf: "", password: "", confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState({ password: false, confirmPassword: false });
+
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
