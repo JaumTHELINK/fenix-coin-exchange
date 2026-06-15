@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Phone, CreditCard, Lock, Recycle } from "lucide-react";
+import { User, Mail, Phone, CreditCard, Lock, Recycle, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,14 @@ const translateError = (msg: string): string => {
   return msg;
 };
 
+const passwordRules = [
+  { id: "length", label: "Pelo menos 8 caracteres", test: (p: string) => p.length >= 8 },
+  { id: "uppercase", label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "lowercase", label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
+  { id: "number", label: "Um número", test: (p: string) => /\d/.test(p) },
+  { id: "special", label: "Um caractere especial (!@#$...)", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
+];
+
 const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -69,7 +77,8 @@ const Register = () => {
     if (!form.email.trim()) errs.email = "Email é obrigatório.";
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errs.phone = "Telefone inválido. Use (XX) XXXXX-XXXX.";
     if (!validateCPF(form.cpf)) errs.cpf = "CPF inválido.";
-    if (form.password.length < 6) errs.password = "A senha deve ter pelo menos 6 caracteres.";
+    if (!passwordRules.every((rule) => rule.test(form.password)))
+      errs.password = "A senha não atende a todos os requisitos.";
     if (form.password !== form.confirmPassword) errs.confirmPassword = "As senhas não coincidem.";
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -140,6 +149,22 @@ const Register = () => {
                 />
               </div>
               {errors[id] && <p className="text-xs text-destructive">{errors[id]}</p>}
+              {id === "password" && (
+                <ul className="mt-2 space-y-1">
+                  {passwordRules.map((rule) => {
+                    const ok = rule.test(form.password);
+                    return (
+                      <li
+                        key={rule.id}
+                        className={`flex items-center gap-1.5 text-xs ${ok ? "text-primary" : "text-muted-foreground"}`}
+                      >
+                        {ok ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
+                        {rule.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           ))}
 
