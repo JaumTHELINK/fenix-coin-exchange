@@ -52,6 +52,19 @@ const Login = () => {
         setLoading(false);
         return;
       }
+
+      // Lojistas go to their store panel
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id);
+      const isLojista = (roles ?? []).some((r) => r.role === "lojista");
+      const isAdmin = (roles ?? []).some((r) => r.role === "admin");
+      if (isLojista && !isAdmin) {
+        navigate("/minha-loja");
+        setLoading(false);
+        return;
+      }
     }
 
     navigate("/dashboard");
