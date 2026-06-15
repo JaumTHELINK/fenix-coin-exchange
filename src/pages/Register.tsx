@@ -135,22 +135,36 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map(({ id, label, icon: Icon, placeholder, type }) => (
-            <div key={id} className="space-y-1">
-              <Label htmlFor={id}>{label}</Label>
-              <div className="relative">
-                <Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id={id}
-                  type={type}
-                  placeholder={placeholder}
-                  className={`pl-10 ${errors[id] ? "border-destructive" : ""}`}
-                  value={form[id as keyof typeof form]}
-                  onChange={update(id)}
-                  required
-                />
-              </div>
-              {errors[id] && <p className="text-xs text-destructive">{errors[id]}</p>}
+          {fields.map(({ id, label, icon: Icon, placeholder, type }) => {
+            const isPassword = id === "password" || id === "confirmPassword";
+            const visible = isPassword ? showPassword[id as keyof typeof showPassword] : false;
+            return (
+              <div key={id} className="space-y-1">
+                <Label htmlFor={id}>{label}</Label>
+                <div className="relative">
+                  <Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id={id}
+                    type={isPassword ? (visible ? "text" : "password") : type}
+                    placeholder={placeholder}
+                    className={`pl-10 ${isPassword ? "pr-10" : ""} ${errors[id] ? "border-destructive" : ""}`}
+                    value={form[id as keyof typeof form]}
+                    onChange={update(id)}
+                    required
+                  />
+                  {isPassword && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => ({ ...prev, [id]: !prev[id as keyof typeof prev] }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  )}
+                </div>
+                {errors[id] && <p className="text-xs text-destructive">{errors[id]}</p>}
+
               {id === "password" && (
                 <ul className="mt-2 space-y-1">
                   {passwordRules.map((rule) => {
