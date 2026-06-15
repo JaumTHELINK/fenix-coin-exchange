@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Phone, CreditCard, Lock, Recycle, Check, X } from "lucide-react";
+import { User, Mail, Phone, CreditCard, Lock, Recycle, Check, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +62,7 @@ const Register = () => {
     name: "", email: "", phone: "", cpf: "", password: "", confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState({ password: false, confirmPassword: false });
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
@@ -133,22 +134,36 @@ const Register = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map(({ id, label, icon: Icon, placeholder, type }) => (
-            <div key={id} className="space-y-1">
-              <Label htmlFor={id}>{label}</Label>
-              <div className="relative">
-                <Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id={id}
-                  type={type}
-                  placeholder={placeholder}
-                  className={`pl-10 ${errors[id] ? "border-destructive" : ""}`}
-                  value={form[id as keyof typeof form]}
-                  onChange={update(id)}
-                  required
-                />
-              </div>
-              {errors[id] && <p className="text-xs text-destructive">{errors[id]}</p>}
+          {fields.map(({ id, label, icon: Icon, placeholder, type }) => {
+            const isPassword = id === "password" || id === "confirmPassword";
+            const visible = isPassword ? showPassword[id as keyof typeof showPassword] : false;
+            return (
+              <div key={id} className="space-y-1">
+                <Label htmlFor={id}>{label}</Label>
+                <div className="relative">
+                  <Icon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id={id}
+                    type={isPassword ? (visible ? "text" : "password") : type}
+                    placeholder={placeholder}
+                    className={`pl-10 ${isPassword ? "pr-10" : ""} ${errors[id] ? "border-destructive" : ""}`}
+                    value={form[id as keyof typeof form]}
+                    onChange={update(id)}
+                    required
+                  />
+                  {isPassword && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => ({ ...prev, [id]: !prev[id as keyof typeof prev] }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  )}
+                </div>
+                {errors[id] && <p className="text-xs text-destructive">{errors[id]}</p>}
+
               {id === "password" && (
                 <ul className="mt-2 space-y-1">
                   {passwordRules.map((rule) => {
@@ -166,9 +181,10 @@ const Register = () => {
                 </ul>
               )}
             </div>
-          ))}
+          )})}
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
+
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
         </form>
