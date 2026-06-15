@@ -67,6 +67,7 @@ const Loja = () => {
   const featured = filtered.filter((p) => p.featured);
 
   const storesWithProducts = partnerStores
+    .filter((store) => store.owner_id !== user?.id)
     .map((store) => ({
       store,
       items: partnerProducts.filter(
