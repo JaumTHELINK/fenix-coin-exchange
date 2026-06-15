@@ -182,13 +182,10 @@ const Register = () => {
                 </ul>
               )}
             </div>
-          )})
-        </div>
-
-
-
+          )})}
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
+
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
         </form>
