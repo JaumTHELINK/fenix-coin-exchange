@@ -148,6 +148,7 @@ export type Database = {
           image_url: string | null
           name: string
           price_fc: number
+          store_id: string | null
           updated_at: string
         }
         Insert: {
@@ -160,6 +161,7 @@ export type Database = {
           image_url?: string | null
           name: string
           price_fc?: number
+          store_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -172,9 +174,18 @@ export type Database = {
           image_url?: string | null
           name?: string
           price_fc?: number
+          store_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -263,6 +274,51 @@ export type Database = {
         }
         Relationships: []
       }
+      stores: {
+        Row: {
+          active: boolean
+          address: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -338,6 +394,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      owns_store: {
+        Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
     }
