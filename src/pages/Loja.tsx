@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ShoppingBag, Info } from "lucide-react";
+import { Search, ShoppingBag, Info, Store as StoreIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -46,13 +46,34 @@ const Loja = () => {
     enabled: !!user,
   });
 
-  const filtered = products.filter((p) => {
+  const { data: partnerStores = [] } = useQuery({
+    queryKey: ["partner-stores"],
+    queryFn: async () => {
+      const { data } = await supabase.from("stores").select("*").eq("active", true).order("name");
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const ecoteinerProducts = products.filter((p) => !p.store_id);
+  const partnerProducts = products.filter((p) => p.store_id);
+
+  const filtered = ecoteinerProducts.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchCat = activeCategory === "Todos" || p.category === activeCategory;
     return matchSearch && matchCat;
   });
 
   const featured = filtered.filter((p) => p.featured);
+
+  const storesWithProducts = partnerStores
+    .map((store) => ({
+      store,
+      items: partnerProducts.filter(
+        (p) => p.store_id === store.id && p.name.toLowerCase().includes(search.toLowerCase())
+      ),
+    }))
+    .filter((s) => s.items.length > 0);
 
   return (
     <div className="space-y-6">
@@ -116,6 +137,41 @@ const Loja = () => {
           </div>
         )}
       </section>
+
+      {storesWithProducts.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-2">
+            <StoreIcon className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Lojas Parceiras</h2>
+          </div>
+          {storesWithProducts.map(({ store, items }) => (
+            <div key={store.id} className="rounded-xl bg-card p-5 shadow-card">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-muted">
+                  {store.logo_url ? (
+                    <img src={store.logo_url} alt={store.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <StoreIcon className="h-6 w-6 text-muted-foreground" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">{store.name}</p>
+                  {store.category && <p className="text-xs text-muted-foreground">{store.category}</p>}
+                  {store.address && <p className="text-xs text-muted-foreground">{store.address}</p>}
+                </div>
+              </div>
+              {store.description && (
+                <p className="mb-4 text-sm text-muted-foreground">{store.description}</p>
+              )}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {items.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       <div className="rounded-xl bg-accent p-5">
         <div className="flex items-start gap-3">
