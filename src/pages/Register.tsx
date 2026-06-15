@@ -183,6 +183,8 @@ const Register = () => {
               )}
             </div>
           )})
+        </div>
+
 
 
 
