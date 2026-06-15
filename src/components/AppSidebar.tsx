@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingBag, MapPin, Receipt, LogOut, Recycle, Shield, Menu, X } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, MapPin, Receipt, LogOut, Recycle, Shield, Menu, X, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -17,10 +17,14 @@ const adminItems = [
   { label: "Painel Admin", icon: Shield, path: "/admin" },
 ];
 
+const lojistaItems = [
+  { label: "Minha Loja", icon: Store, path: "/minha-loja" },
+];
+
 const AppSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, isLojista } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const { data: profile } = useQuery({
@@ -44,7 +48,7 @@ const AppSidebar = () => {
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Usuário";
   const balance = profile?.balance ?? 0;
 
-  const allNavItems = [...navItems, ...(isAdmin ? adminItems : [])];
+  const allNavItems = [...navItems, ...(isLojista ? lojistaItems : []), ...(isAdmin ? adminItems : [])];
 
   const sidebarContent = (
     <>

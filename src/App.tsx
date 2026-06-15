@@ -15,6 +15,7 @@ import ProductDetail from "./pages/ProductDetail";
 import PontosColeta from "./pages/PontosColeta";
 import Extrato from "./pages/Extrato";
 import Admin from "./pages/Admin";
+import MinhaLoja from "./pages/MinhaLoja";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/pontos" element={<PontosColeta />} />
               <Route path="/extrato" element={<Extrato />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/minha-loja" element={<MinhaLoja />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
