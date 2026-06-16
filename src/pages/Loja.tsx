@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { Search, ShoppingBag, Info, Store as StoreIcon } from "lucide-react";
+import { Search, ShoppingBag, Info, Store as StoreIcon, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 
 const Loja = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
 
@@ -21,6 +25,30 @@ const Loja = () => {
     },
     enabled: !!user,
   });
+
+  const balance = Number(profile?.balance ?? 0);
+
+  const redeem = useMutation({
+    mutationFn: async (productId: string) => {
+      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
+    },
+    onError: (err: any) => toast({ title: "Não foi possível resgatar", description: err.message, variant: "destructive" }),
+  });
+
+  const handleRedeem = (product: ProductType) => {
+    if (balance < Number(product.price_fc)) {
+      toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Resgatar "${product.name}" por ${Number(product.price_fc)} FC?`)) return;
+    redeem.mutate(product.id);
+  };
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["product-categories"],
