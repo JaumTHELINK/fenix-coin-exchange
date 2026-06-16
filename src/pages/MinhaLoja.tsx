@@ -49,6 +49,15 @@ const MinhaLoja = () => {
     enabled: !!user,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["my-store-profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("balance, pending_balance").eq("user_id", user!.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   // ---- Store info form ----
   const [storeForm, setStoreForm] = useState({ name: "", category: "", description: "", address: "", phone: "", logo_url: "" });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
