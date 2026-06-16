@@ -234,6 +234,19 @@ const MinhaLoja = () => {
         <p className="text-sm text-muted-foreground">Gerencie os dados da sua loja e os produtos disponíveis.</p>
       </div>
 
+      {/* Saldos */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-4 text-primary-foreground">
+          <p className="text-sm font-medium text-primary-foreground/80">Saldo disponível</p>
+          <p className="text-2xl font-bold tabular-nums">{Number(profile?.balance ?? 0)} FC</p>
+        </div>
+        <div className="rounded-xl bg-card px-6 py-4 shadow-card">
+          <p className="text-sm font-medium text-muted-foreground">Saldo pendente</p>
+          <p className="text-2xl font-bold tabular-nums text-foreground">{Number(profile?.pending_balance ?? 0)} FC</p>
+          <p className="mt-1 text-xs text-muted-foreground">Liberado automaticamente no 5º dia útil de cada mês.</p>
+        </div>
+      </div>
+
       {/* Store data */}
       <section className="rounded-xl bg-card p-6 shadow-card space-y-3">
         <h2 className="font-semibold text-foreground">Dados da loja</h2>
