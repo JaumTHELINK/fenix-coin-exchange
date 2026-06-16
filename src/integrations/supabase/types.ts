@@ -198,6 +198,7 @@ export type Database = {
           is_active: boolean
           level: string
           month_recycled_kg: number
+          pending_balance: number
           phone: string | null
           total_recycled_kg: number
           updated_at: string
@@ -213,6 +214,7 @@ export type Database = {
           is_active?: boolean
           level?: string
           month_recycled_kg?: number
+          pending_balance?: number
           phone?: string | null
           total_recycled_kg?: number
           updated_at?: string
@@ -228,6 +230,7 @@ export type Database = {
           is_active?: boolean
           level?: string
           month_recycled_kg?: number
+          pending_balance?: number
           phone?: string | null
           total_recycled_kg?: number
           updated_at?: string
@@ -396,10 +399,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_fifth_business_day: { Args: { _d: string }; Returns: boolean }
       owns_store: {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
+      redeem_store_product: { Args: { _product_id: string }; Returns: Json }
+      release_pending_earnings: { Args: never; Returns: number }
+      release_pending_if_due: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "lojista"
