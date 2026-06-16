@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { Search, ShoppingBag, Info, Store as StoreIcon } from "lucide-react";
+import { Search, ShoppingBag, Info, Store as StoreIcon, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 
 const Loja = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
 
@@ -21,6 +25,30 @@ const Loja = () => {
     },
     enabled: !!user,
   });
+
+  const balance = Number(profile?.balance ?? 0);
+
+  const redeem = useMutation({
+    mutationFn: async (productId: string) => {
+      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
+    },
+    onError: (err: any) => toast({ title: "Não foi possível resgatar", description: err.message, variant: "destructive" }),
+  });
+
+  const handleRedeem = (product: ProductType) => {
+    if (balance < Number(product.price_fc)) {
+      toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Resgatar "${product.name}" por ${Number(product.price_fc)} FC?`)) return;
+    redeem.mutate(product.id);
+  };
 
   const { data: dbCategories = [] } = useQuery({
     queryKey: ["product-categories"],
@@ -166,7 +194,12 @@ const Loja = () => {
               )}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {items.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onRedeem={() => handleRedeem(product)}
+                    redeeming={redeem.isPending}
+                  />
                 ))}
               </div>
             </div>
@@ -199,24 +232,40 @@ interface ProductType {
   featured: boolean;
 }
 
-const ProductCard = ({ product }: { product: ProductType }) => (
-  <Link to={`/loja/${product.id}`} className="group rounded-xl bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover block">
-    <div className="mb-3 flex h-32 items-center justify-center rounded-lg bg-muted overflow-hidden">
-      {product.image_url ? (
-        <img src={product.image_url} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
-      ) : (
-        <ShoppingBag className="h-8 w-8 text-muted-foreground transition-transform group-hover:scale-110" />
+const ProductCard = ({
+  product,
+  onRedeem,
+  redeeming,
+}: {
+  product: ProductType;
+  onRedeem?: () => void;
+  redeeming?: boolean;
+}) => (
+  <div className="group rounded-xl bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover flex flex-col">
+    <Link to={`/loja/${product.id}`} className="block">
+      <div className="mb-3 flex h-32 items-center justify-center rounded-lg bg-muted overflow-hidden">
+        {product.image_url ? (
+          <img src={product.image_url} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+        ) : (
+          <ShoppingBag className="h-8 w-8 text-muted-foreground transition-transform group-hover:scale-110" />
+        )}
+      </div>
+      <p className="text-sm font-medium text-foreground">{product.name}</p>
+      {product.description && (
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{product.description}</p>
       )}
-    </div>
-    <p className="text-sm font-medium text-foreground">{product.name}</p>
-    {product.description && (
-      <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-    )}
+    </Link>
     <div className="mt-3 flex items-center justify-between">
       <span className="text-sm font-bold text-primary tabular-nums">{Number(product.price_fc)} FC</span>
-      <span className="text-xs text-muted-foreground">Informativo</span>
+      {onRedeem ? (
+        <Button size="sm" onClick={onRedeem} disabled={redeeming}>
+          {redeeming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Resgatar"}
+        </Button>
+      ) : (
+        <span className="text-xs text-muted-foreground">Informativo</span>
+      )}
     </div>
-  </Link>
+  </div>
 );
 
 export default Loja;
