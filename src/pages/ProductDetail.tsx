@@ -1,13 +1,16 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -27,6 +30,40 @@ const ProductDetail = () => {
     enabled: !!user,
   });
 
+  const { data: store } = useQuery({
+    queryKey: ["store", product?.store_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("stores").select("*").eq("id", product!.store_id!).single();
+      return data;
+    },
+    enabled: !!product?.store_id,
+  });
+
+  const redeem = useMutation({
+    mutationFn: async (productId: string) => {
+      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
+    },
+    onError: (err: any) => toast({ title: "Não foi possível resgatar", description: err.message, variant: "destructive" }),
+  });
+
+  const balance = Number(profile?.balance ?? 0);
+
+  const handleRedeem = () => {
+    if (!product) return;
+    if (balance < Number(product.price_fc)) {
+      toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
+      return;
+    }
+    if (!confirm(`Resgatar "${product.name}" por ${Number(product.price_fc)} FC?`)) return;
+    redeem.mutate(product.id);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -43,6 +80,8 @@ const ProductDetail = () => {
       </div>
     );
   }
+
+  const isPartnerProduct = !!product.store_id && store?.owner_id !== user?.id;
 
   return (
     <div className="space-y-6">
@@ -86,6 +125,12 @@ const ProductDetail = () => {
             <p className="mt-3 text-xs text-muted-foreground underline cursor-pointer">
               Políticas de garantia e troca de produtos
             </p>
+
+            {isPartnerProduct && (
+              <Button className="mt-4 w-full" onClick={handleRedeem} disabled={redeem.isPending}>
+                {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
+              </Button>
+            )}
           </div>
 
           <div className="rounded-xl bg-accent p-4">
