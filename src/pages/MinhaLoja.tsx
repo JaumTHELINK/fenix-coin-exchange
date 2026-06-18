@@ -227,6 +227,19 @@ const MinhaLoja = () => {
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
 
+  const cancelOrder = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.rpc("cancel_store_order", { _order_id: id });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-store-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["my-store-profile"] });
+      toast({ title: "Pedido cancelado", description: "O valor foi devolvido ao cliente." });
+    },
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
   // Agrupa pedidos: pendentes (destaque), recebidos recentes (<= 1 dia) e arquivados (> 1 dia)
   const ONE_DAY_MS = 24 * 60 * 60 * 1000;
   const isProcessed = (o: any) => o.status === "entregue" || o.status === "cancelado";
@@ -289,8 +302,8 @@ const MinhaLoja = () => {
                         size="sm"
                         variant="outline"
                         className="h-8 text-xs border-destructive text-destructive hover:bg-destructive/10"
-                        onClick={() => updateOrderStatus.mutate({ id: o.id, status: "cancelado" })}
-                        disabled={updateOrderStatus.isPending}
+                        onClick={() => cancelOrder.mutate(o.id)}
+                        disabled={cancelOrder.isPending}
                       >
                         Cancelar
                       </Button>

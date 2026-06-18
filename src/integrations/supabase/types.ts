@@ -455,6 +455,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_store_order: { Args: { _order_id: string }; Returns: Json }
       cleanup_old_orders: { Args: never; Returns: number }
       has_role: {
         Args: {
