@@ -29,9 +29,11 @@ const formatPhone = (value: string) => {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 };
 
-const uploadImage = async (file: File, prefix: string): Promise<string> => {
-  const ext = file.name.split(".").pop();
-  const path = `${prefix}-${crypto.randomUUID()}.${ext}`;
+const uploadImage = async (file: File, prefix: string, storeId: string): Promise<string> => {
+  // Segurança (OWASP A01): imagens vão para a pasta da própria loja (`{storeId}/...`),
+  // e a política de storage só permite gravar dentro dessa pasta.
+  const ext = (file.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `${storeId}/${prefix}-${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from("product-images").upload(path, file);
   if (error) throw error;
   const { data } = supabase.storage.from("product-images").getPublicUrl(path);
@@ -94,7 +96,8 @@ const MinhaLoja = () => {
     if (!file) return;
     setLogoUploading(true);
     try {
-      const url = await uploadImage(file, "store");
+      if (!store?.id) throw new Error("Loja não encontrada.");
+      const url = await uploadImage(file, "store", store.id);
       setStoreForm((f) => ({ ...f, logo_url: url }));
       setLogoPreview(url);
       toast({ title: "Logo enviado!" });
@@ -154,7 +157,8 @@ const MinhaLoja = () => {
     if (!file) return;
     setUploading(true);
     try {
-      const url = await uploadImage(file, "product");
+      if (!store?.id) throw new Error("Loja não encontrada.");
+      const url = await uploadImage(file, "product", store.id);
       setForm((f) => ({ ...f, image_url: url }));
       setPreviewUrl(url);
       toast({ title: "Imagem enviada!" });
