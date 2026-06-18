@@ -68,6 +68,13 @@ const MinhaLoja = () => {
   const logoRef = useRef<HTMLInputElement>(null);
   const [showArchived, setShowArchived] = useState(false);
 
+  // ---- Order filters ----
+  const [filterDate, setFilterDate] = useState("");
+  const [filterClient, setFilterClient] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
+
   useEffect(() => {
     if (store) {
       setStoreForm({
@@ -240,14 +247,23 @@ const MinhaLoja = () => {
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
 
+  // Aplica filtros nos pedidos
+  const filteredOrders = orders.filter((o) => {
+    const matchDate = !filterDate || new Date(o.created_at).toISOString().slice(0, 10) === filterDate;
+    const matchClient = !filterClient || (o.customer_name || "").toLowerCase().includes(filterClient.toLowerCase());
+    const matchProduct = !filterProduct || (o.product_name || "").toLowerCase().includes(filterProduct.toLowerCase());
+    const matchStatus = !filterStatus || o.status === filterStatus;
+    return matchDate && matchClient && matchProduct && matchStatus;
+  });
+
   // Agrupa pedidos: pendentes (destaque), recebidos recentes (<= 1 dia) e arquivados (> 1 dia)
   const ONE_DAY_MS = 24 * 60 * 60 * 1000;
   const isProcessed = (o: any) => o.status === "entregue" || o.status === "cancelado";
-  const pendingOrders = orders.filter((o) => o.status === "pendente");
-  const recentOrders = orders.filter(
+  const pendingOrders = filteredOrders.filter((o) => o.status === "pendente");
+  const recentOrders = filteredOrders.filter(
     (o) => isProcessed(o) && Date.now() - new Date(o.updated_at).getTime() <= ONE_DAY_MS,
   );
-  const archivedOrders = orders.filter(
+  const archivedOrders = filteredOrders.filter(
     (o) => isProcessed(o) && Date.now() - new Date(o.updated_at).getTime() > ONE_DAY_MS,
   );
 
@@ -378,6 +394,67 @@ const MinhaLoja = () => {
           <p className="mt-1 text-xs text-muted-foreground">Liberado automaticamente no 5º dia útil de cada mês.</p>
         </div>
       </div>
+
+      {/* Filtros de pedidos */}
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">Filtrar pedidos</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Data</label>
+            <Input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Cliente</label>
+            <Input
+              placeholder="Nome do cliente"
+              value={filterClient}
+              onChange={(e) => setFilterClient(e.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Produto</label>
+            <Input
+              placeholder="Nome do produto"
+              value={filterProduct}
+              onChange={(e) => setFilterProduct(e.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="entregue">Entregue</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+        {(filterDate || filterClient || filterProduct || filterStatus) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setFilterDate("");
+              setFilterClient("");
+              setFilterProduct("");
+              setFilterStatus("");
+            }}
+          >
+            Limpar filtros
+          </Button>
+        )}
+      </section>
 
       {/* Pedidos pendentes — destaque */}
       <section className="space-y-4">
