@@ -67,6 +67,14 @@ const MinhaLoja = () => {
   const [logoUploading, setLogoUploading] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [showStoreDialog, setShowStoreDialog] = useState(false);
+
+  // ---- Order filters ----
+  const [filterDate, setFilterDate] = useState("");
+  const [filterClient, setFilterClient] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+
 
   useEffect(() => {
     if (store) {
