@@ -226,6 +226,17 @@ const MinhaLoja = () => {
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
 
+  // Agrupa pedidos: pendentes (destaque), recebidos recentes (<= 1 dia) e arquivados (> 1 dia)
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const isProcessed = (o: any) => o.status === "entregue" || o.status === "cancelado";
+  const pendingOrders = orders.filter((o) => o.status === "pendente");
+  const recentOrders = orders.filter(
+    (o) => isProcessed(o) && Date.now() - new Date(o.updated_at).getTime() <= ONE_DAY_MS,
+  );
+  const archivedOrders = orders.filter(
+    (o) => isProcessed(o) && Date.now() - new Date(o.updated_at).getTime() > ONE_DAY_MS,
+  );
+
   const startEdit = (p: any) => {
     setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "" });
     setPreviewUrl(p.image_url || null);
