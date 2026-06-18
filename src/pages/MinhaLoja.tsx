@@ -302,8 +302,8 @@ const MinhaLoja = () => {
                         size="sm"
                         variant="outline"
                         className="h-8 text-xs border-destructive text-destructive hover:bg-destructive/10"
-                        onClick={() => updateOrderStatus.mutate({ id: o.id, status: "cancelado" })}
-                        disabled={updateOrderStatus.isPending}
+                        onClick={() => cancelOrder.mutate(o.id)}
+                        disabled={cancelOrder.isPending}
                       >
                         Cancelar
                       </Button>
