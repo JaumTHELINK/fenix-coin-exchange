@@ -247,14 +247,23 @@ const MinhaLoja = () => {
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
 
+  // Aplica filtros nos pedidos
+  const filteredOrders = orders.filter((o) => {
+    const matchDate = !filterDate || new Date(o.created_at).toISOString().slice(0, 10) === filterDate;
+    const matchClient = !filterClient || (o.customer_name || "").toLowerCase().includes(filterClient.toLowerCase());
+    const matchProduct = !filterProduct || (o.product_name || "").toLowerCase().includes(filterProduct.toLowerCase());
+    const matchStatus = !filterStatus || o.status === filterStatus;
+    return matchDate && matchClient && matchProduct && matchStatus;
+  });
+
   // Agrupa pedidos: pendentes (destaque), recebidos recentes (<= 1 dia) e arquivados (> 1 dia)
   const ONE_DAY_MS = 24 * 60 * 60 * 1000;
   const isProcessed = (o: any) => o.status === "entregue" || o.status === "cancelado";
-  const pendingOrders = orders.filter((o) => o.status === "pendente");
-  const recentOrders = orders.filter(
+  const pendingOrders = filteredOrders.filter((o) => o.status === "pendente");
+  const recentOrders = filteredOrders.filter(
     (o) => isProcessed(o) && Date.now() - new Date(o.updated_at).getTime() <= ONE_DAY_MS,
   );
-  const archivedOrders = orders.filter(
+  const archivedOrders = filteredOrders.filter(
     (o) => isProcessed(o) && Date.now() - new Date(o.updated_at).getTime() > ONE_DAY_MS,
   );
 
