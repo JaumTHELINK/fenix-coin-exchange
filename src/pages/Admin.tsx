@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, ShoppingBag, MapPin, Receipt, BarChart3, Settings, Coins, Megaphone, Mail, Store } from "lucide-react";
+import { Users, ShoppingBag, MapPin, Receipt, BarChart3, Settings, Coins, Megaphone, Mail, Store, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminProducts from "@/components/admin/AdminProducts";
@@ -12,6 +12,7 @@ import AdminReports from "@/components/admin/AdminReports";
 import AdminMaterialRates from "@/components/admin/AdminMaterialRates";
 import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminContacts from "@/components/admin/AdminContacts";
+import AdminMonitoring from "@/components/admin/AdminMonitoring";
 
 const tabs = [
   { id: "users", label: "Usuários", icon: Users },
@@ -23,6 +24,7 @@ const tabs = [
   { id: "promotions", label: "Promoções", icon: Megaphone },
   { id: "contacts", label: "Contato", icon: Mail },
   { id: "reports", label: "Relatórios", icon: BarChart3 },
+  { id: "monitoring", label: "Monitoramento", icon: Activity },
 ];
 
 const Admin = () => {
@@ -80,6 +82,7 @@ const Admin = () => {
       {activeTab === "promotions" && <AdminPromotions />}
       {activeTab === "contacts" && <AdminContacts />}
       {activeTab === "reports" && <AdminReports />}
+      {activeTab === "monitoring" && <AdminMonitoring />}
     </div>
   );
 };
