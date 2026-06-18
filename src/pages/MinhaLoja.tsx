@@ -264,12 +264,17 @@ const MinhaLoja = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
-          <StoreIcon className="h-6 w-6 text-muted-foreground" />
-          Minha Loja
-        </h1>
-        <p className="text-sm text-muted-foreground">Gerencie os dados da sua loja e os produtos disponíveis.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
+            <StoreIcon className="h-6 w-6 text-muted-foreground" />
+            Minha Loja
+          </h1>
+          <p className="text-sm text-muted-foreground">Gerencie os dados da sua loja e os produtos disponíveis.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setShowStoreDialog(true)}>
+          <Settings className="mr-2 h-4 w-4" /> Dados da loja
+        </Button>
       </div>
 
       {/* Saldos */}
