@@ -6,8 +6,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save } from "lucide-react";
+import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save, ClipboardList, Phone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+
+const ORDER_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  pendente: { label: "Pendente", variant: "secondary" },
+  separacao: { label: "Em separação", variant: "outline" },
+  enviado: { label: "Enviado", variant: "outline" },
+  entregue: { label: "Entregue", variant: "default" },
+  cancelado: { label: "Cancelado", variant: "destructive" },
+};
+const ORDER_STATUS_KEYS = ["pendente", "separacao", "enviado", "entregue", "cancelado"] as const;
 
 interface ProductForm {
   name: string;
@@ -196,6 +206,32 @@ const MinhaLoja = () => {
     },
   });
 
+  // ---- Orders ----
+  const { data: orders = [] } = useQuery({
+    queryKey: ["my-store-orders", store?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("store_id", store!.id)
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!store,
+  });
+
+  const updateOrderStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-store-orders"] });
+      toast({ title: "Status do pedido atualizado!" });
+    },
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
   const startEdit = (p: any) => {
     setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "" });
     setPreviewUrl(p.image_url || null);
@@ -246,6 +282,75 @@ const MinhaLoja = () => {
           <p className="mt-1 text-xs text-muted-foreground">Liberado automaticamente no 5º dia útil de cada mês.</p>
         </div>
       </div>
+
+      {/* Pedidos */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-muted-foreground" />
+          <h2 className="font-semibold text-foreground">Pedidos recebidos</h2>
+          {orders.length > 0 && (
+            <Badge variant="secondary" className="text-xs">{orders.length}</Badge>
+          )}
+        </div>
+
+        <div className="rounded-xl bg-card shadow-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Data</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cliente</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Produto</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Qtd</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Total (FC)</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((o) => (
+                  <tr key={o.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {new Date(o.created_at).toLocaleDateString("pt-BR")}
+                    </td>
+                    <td className="px-4 py-3 text-foreground">
+                      <div className="font-medium">{o.customer_name || "—"}</div>
+                      {o.customer_phone && (
+                        <a href={`tel:${o.customer_phone}`} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
+                          <Phone className="h-3 w-3" /> {o.customer_phone}
+                        </a>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-foreground">{o.product_name}</td>
+                    <td className="px-4 py-3 text-center tabular-nums text-foreground">{o.quantity}</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">{Number(o.total_fc)} FC</td>
+                    <td className="px-4 py-3">
+                      <Select value={o.status} onValueChange={(v) => updateOrderStatus.mutate({ id: o.id, status: v })}>
+                        <SelectTrigger className="h-8 w-40">
+                          <SelectValue>
+                            <Badge variant={ORDER_STATUS[o.status]?.variant ?? "secondary"} className="text-xs">
+                              {ORDER_STATUS[o.status]?.label ?? o.status}
+                            </Badge>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ORDER_STATUS_KEYS.map((k) => (
+                            <SelectItem key={k} value={k}>{ORDER_STATUS[k].label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                  </tr>
+                ))}
+                {orders.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum pedido recebido ainda.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
       {/* Store data */}
       <section className="rounded-xl bg-card p-6 shadow-card space-y-3">
