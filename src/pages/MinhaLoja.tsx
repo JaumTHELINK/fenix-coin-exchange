@@ -395,6 +395,67 @@ const MinhaLoja = () => {
         </div>
       </div>
 
+      {/* Filtros de pedidos */}
+      <section className="space-y-3">
+        <h3 className="text-sm font-medium text-muted-foreground">Filtrar pedidos</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Data</label>
+            <Input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Cliente</label>
+            <Input
+              placeholder="Nome do cliente"
+              value={filterClient}
+              onChange={(e) => setFilterClient(e.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Produto</label>
+            <Input
+              placeholder="Nome do produto"
+              value={filterProduct}
+              onChange={(e) => setFilterProduct(e.target.value)}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="entregue">Entregue</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+        {(filterDate || filterClient || filterProduct || filterStatus) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setFilterDate("");
+              setFilterClient("");
+              setFilterProduct("");
+              setFilterStatus("");
+            }}
+          >
+            Limpar filtros
+          </Button>
+        )}
+      </section>
+
       {/* Pedidos pendentes — destaque */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
