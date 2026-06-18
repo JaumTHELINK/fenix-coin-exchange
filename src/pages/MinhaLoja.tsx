@@ -206,6 +206,32 @@ const MinhaLoja = () => {
     },
   });
 
+  // ---- Orders ----
+  const { data: orders = [] } = useQuery({
+    queryKey: ["my-store-orders", store?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("store_id", store!.id)
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!store,
+  });
+
+  const updateOrderStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-store-orders"] });
+      toast({ title: "Status do pedido atualizado!" });
+    },
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
   const startEdit = (p: any) => {
     setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "" });
     setPreviewUrl(p.image_url || null);
