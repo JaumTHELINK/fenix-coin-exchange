@@ -66,6 +66,7 @@ const MinhaLoja = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoRef = useRef<HTMLInputElement>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     if (store) {
