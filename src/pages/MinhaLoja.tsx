@@ -6,8 +6,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save } from "lucide-react";
+import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save, ClipboardList, Phone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+
+const ORDER_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  pendente: { label: "Pendente", variant: "secondary" },
+  separacao: { label: "Em separação", variant: "outline" },
+  enviado: { label: "Enviado", variant: "outline" },
+  entregue: { label: "Entregue", variant: "default" },
+  cancelado: { label: "Cancelado", variant: "destructive" },
+};
+const ORDER_STATUS_KEYS = ["pendente", "separacao", "enviado", "entregue", "cancelado"] as const;
 
 interface ProductForm {
   name: string;
