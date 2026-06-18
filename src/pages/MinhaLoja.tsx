@@ -366,85 +366,52 @@ const MinhaLoja = () => {
         </div>
       </div>
 
-      {/* Pedidos */}
+      {/* Pedidos pendentes — destaque */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold text-foreground">Pedidos pendentes</h2>
+          {pendingOrders.length > 0 && (
+            <Badge className="text-xs">{pendingOrders.length}</Badge>
+          )}
+        </div>
+        <div className={pendingOrders.length > 0 ? "rounded-xl ring-2 ring-primary/40" : ""}>
+          {renderOrdersTable(pendingOrders, "Nenhum pedido pendente no momento.")}
+        </div>
+      </section>
+
+      {/* Pedidos recebidos — recentes */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-muted-foreground" />
           <h2 className="font-semibold text-foreground">Pedidos recebidos</h2>
-          {orders.length > 0 && (
-            <Badge variant="secondary" className="text-xs">{orders.length}</Badge>
+          {recentOrders.length > 0 && (
+            <Badge variant="secondary" className="text-xs">{recentOrders.length}</Badge>
           )}
         </div>
+        <p className="text-xs text-muted-foreground">Pedidos já tratados nas últimas 24 horas.</p>
+        {renderOrdersTable(recentOrders, "Nenhum pedido recebido recentemente.")}
+      </section>
 
-        <div className="rounded-xl bg-card shadow-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Data</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cliente</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Produto</th>
-                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Qtd</th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Total (FC)</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => (
-                  <tr key={o.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                      {new Date(o.created_at).toLocaleDateString("pt-BR")}
-                    </td>
-                    <td className="px-4 py-3 text-foreground">
-                      <div className="font-medium">{o.customer_name || "—"}</div>
-                      {o.customer_phone && (
-                        <a href={`tel:${o.customer_phone}`} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
-                          <Phone className="h-3 w-3" /> {o.customer_phone}
-                        </a>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-foreground">{o.product_name}</td>
-                    <td className="px-4 py-3 text-center tabular-nums text-foreground">{o.quantity}</td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">{Number(o.total_fc)} FC</td>
-                    <td className="px-4 py-3">
-                      {o.status === "entregue" ? (
-                        <Badge variant="default" className="text-xs">Entregue</Badge>
-                      ) : o.status === "cancelado" ? (
-                        <Badge variant="destructive" className="text-xs">Cancelado</Badge>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            className="h-8 text-xs"
-                            onClick={() => updateOrderStatus.mutate({ id: o.id, status: "entregue" })}
-                            disabled={updateOrderStatus.isPending}
-                          >
-                            Aprovar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 text-xs border-destructive text-destructive hover:bg-destructive/10"
-                            onClick={() => updateOrderStatus.mutate({ id: o.id, status: "cancelado" })}
-                            disabled={updateOrderStatus.isPending}
-                          >
-                            Cancelar
-                          </Button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-                {orders.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Nenhum pedido recebido ainda.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Pedidos arquivados */}
+      <section className="space-y-4">
+        <button
+          type="button"
+          onClick={() => setShowArchived((v) => !v)}
+          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ClipboardList className="h-4 w-4" />
+          {showArchived ? "Ocultar arquivados" : "Ver pedidos arquivados"}
+          {archivedOrders.length > 0 && (
+            <Badge variant="outline" className="text-xs">{archivedOrders.length}</Badge>
+          )}
+        </button>
+        {showArchived && (
+          <>
+            <p className="text-xs text-muted-foreground">Pedidos tratados há mais de 1 dia. O histórico é mantido por 2 anos.</p>
+            {renderOrdersTable(archivedOrders, "Nenhum pedido arquivado.", true)}
+          </>
+        )}
       </section>
 
       {/* Store data */}
