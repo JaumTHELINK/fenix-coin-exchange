@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save, ClipboardList, Phone } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save, ClipboardList, Phone, Settings } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
@@ -134,6 +135,7 @@ const MinhaLoja = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+  const [showStoreDialog, setShowStoreDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: allProducts = [] } = useQuery({
@@ -262,12 +264,17 @@ const MinhaLoja = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
-          <StoreIcon className="h-6 w-6 text-muted-foreground" />
-          Minha Loja
-        </h1>
-        <p className="text-sm text-muted-foreground">Gerencie os dados da sua loja e os produtos disponíveis.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
+            <StoreIcon className="h-6 w-6 text-muted-foreground" />
+            Minha Loja
+          </h1>
+          <p className="text-sm text-muted-foreground">Gerencie os dados da sua loja e os produtos disponíveis.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setShowStoreDialog(true)}>
+          <Settings className="mr-2 h-4 w-4" /> Dados da loja
+        </Button>
       </div>
 
       {/* Saldos */}
@@ -353,44 +360,53 @@ const MinhaLoja = () => {
       </section>
 
       {/* Store data */}
-      <section className="rounded-xl bg-card p-6 shadow-card space-y-3">
-        <h2 className="font-semibold text-foreground">Dados da loja</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Nome da loja" value={storeForm.name} onChange={(e) => setStoreForm((f) => ({ ...f, name: e.target.value }))} />
-          <Input placeholder="Categoria (ex: Alimentação)" value={storeForm.category} onChange={(e) => setStoreForm((f) => ({ ...f, category: e.target.value }))} />
-          <Input placeholder="Telefone" value={storeForm.phone} onChange={(e) => setStoreForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))} />
-          <Input placeholder="Endereço" value={storeForm.address} onChange={(e) => setStoreForm((f) => ({ ...f, address: e.target.value }))} />
-        </div>
-        <textarea
-          placeholder="Descrição da loja"
-          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
-          rows={3}
-          value={storeForm.description}
-          onChange={(e) => setStoreForm((f) => ({ ...f, description: e.target.value }))}
-        />
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Logo da loja</label>
-          <div className="flex items-center gap-3">
-            <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
-            <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={logoUploading}>
-              <Upload className="mr-2 h-4 w-4" />{logoUploading ? "Enviando..." : "Enviar logo"}
-            </Button>
-            {logoPreview && (
-              <Button type="button" variant="ghost" size="sm" onClick={() => { setStoreForm((f) => ({ ...f, logo_url: "" })); setLogoPreview(null); }}>
-                <X className="mr-1 h-3 w-3" /> Remover
-              </Button>
-            )}
-          </div>
-          {logoPreview && (
-            <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-border">
-              <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+      <Dialog open={showStoreDialog} onOpenChange={setShowStoreDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-muted-foreground" />
+              Dados da loja
+            </DialogTitle>
+          </DialogHeader>
+          <section className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input placeholder="Nome da loja" value={storeForm.name} onChange={(e) => setStoreForm((f) => ({ ...f, name: e.target.value }))} />
+              <Input placeholder="Categoria (ex: Alimentação)" value={storeForm.category} onChange={(e) => setStoreForm((f) => ({ ...f, category: e.target.value }))} />
+              <Input placeholder="Telefone" value={storeForm.phone} onChange={(e) => setStoreForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))} />
+              <Input placeholder="Endereço" value={storeForm.address} onChange={(e) => setStoreForm((f) => ({ ...f, address: e.target.value }))} />
             </div>
-          )}
-        </div>
-        <Button onClick={() => saveStore.mutate()} disabled={!storeForm.name || saveStore.isPending}>
-          <Save className="mr-2 h-4 w-4" />{saveStore.isPending ? "Salvando..." : "Salvar dados"}
-        </Button>
-      </section>
+            <textarea
+              placeholder="Descrição da loja"
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground"
+              rows={3}
+              value={storeForm.description}
+              onChange={(e) => setStoreForm((f) => ({ ...f, description: e.target.value }))}
+            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Logo da loja</label>
+              <div className="flex items-center gap-3">
+                <input ref={logoRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+                <Button type="button" variant="outline" size="sm" onClick={() => logoRef.current?.click()} disabled={logoUploading}>
+                  <Upload className="mr-2 h-4 w-4" />{logoUploading ? "Enviando..." : "Enviar logo"}
+                </Button>
+                {logoPreview && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => { setStoreForm((f) => ({ ...f, logo_url: "" })); setLogoPreview(null); }}>
+                    <X className="mr-1 h-3 w-3" /> Remover
+                  </Button>
+                )}
+              </div>
+              {logoPreview && (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-border">
+                  <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
+            <Button onClick={() => { saveStore.mutate(); setShowStoreDialog(false); }} disabled={!storeForm.name || saveStore.isPending}>
+              <Save className="mr-2 h-4 w-4" />{saveStore.isPending ? "Salvando..." : "Salvar dados"}
+            </Button>
+          </section>
+        </DialogContent>
+      </Dialog>
 
       {/* Products */}
       <section className="space-y-4">
