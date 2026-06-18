@@ -113,6 +113,81 @@ export type Database = {
         }
         Relationships: []
       }
+      monitoring_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          level: string
+          message: string
+          metric_key: string
+          notified: boolean
+          threshold: number
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          level: string
+          message: string
+          metric_key: string
+          notified?: boolean
+          threshold: number
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          level?: string
+          message?: string
+          metric_key?: string
+          notified?: boolean
+          threshold?: number
+          value?: number
+        }
+        Relationships: []
+      }
+      monitoring_thresholds: {
+        Row: {
+          created_at: string
+          crit_value: number
+          direction: string
+          enabled: boolean
+          id: string
+          label: string
+          metric_key: string
+          unit: string
+          updated_at: string
+          warn_value: number
+        }
+        Insert: {
+          created_at?: string
+          crit_value: number
+          direction?: string
+          enabled?: boolean
+          id?: string
+          label: string
+          metric_key: string
+          unit?: string
+          updated_at?: string
+          warn_value: number
+        }
+        Update: {
+          created_at?: string
+          crit_value?: number
+          direction?: string
+          enabled?: boolean
+          id?: string
+          label?: string
+          metric_key?: string
+          unit?: string
+          updated_at?: string
+          warn_value?: number
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -455,8 +530,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _compute_db_metrics: { Args: never; Returns: Json }
       cancel_store_order: { Args: { _order_id: string }; Returns: Json }
       cleanup_old_orders: { Args: never; Returns: number }
+      get_db_metrics: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
