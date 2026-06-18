@@ -8,17 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Store as StoreIcon, Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, Save, ClipboardList, Phone, Settings } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { useToast } from "@/hooks/use-toast";
 
-const ORDER_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pendente: { label: "Pendente", variant: "secondary" },
-  separacao: { label: "Em separação", variant: "outline" },
-  enviado: { label: "Enviado", variant: "outline" },
-  entregue: { label: "Entregue", variant: "default" },
-  cancelado: { label: "Cancelado", variant: "destructive" },
-};
-const ORDER_STATUS_KEYS = ["pendente", "separacao", "enviado", "entregue", "cancelado"] as const;
 
 interface ProductForm {
   name: string;
@@ -331,20 +323,32 @@ const MinhaLoja = () => {
                     <td className="px-4 py-3 text-center tabular-nums text-foreground">{o.quantity}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">{Number(o.total_fc)} FC</td>
                     <td className="px-4 py-3">
-                      <Select value={o.status} onValueChange={(v) => updateOrderStatus.mutate({ id: o.id, status: v })}>
-                        <SelectTrigger className="h-8 w-40">
-                          <SelectValue>
-                            <Badge variant={ORDER_STATUS[o.status]?.variant ?? "secondary"} className="text-xs">
-                              {ORDER_STATUS[o.status]?.label ?? o.status}
-                            </Badge>
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ORDER_STATUS_KEYS.map((k) => (
-                            <SelectItem key={k} value={k}>{ORDER_STATUS[k].label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {o.status === "entregue" ? (
+                        <Badge variant="default" className="text-xs">Entregue</Badge>
+                      ) : o.status === "cancelado" ? (
+                        <Badge variant="destructive" className="text-xs">Cancelado</Badge>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-8 text-xs"
+                            onClick={() => updateOrderStatus.mutate({ id: o.id, status: "entregue" })}
+                            disabled={updateOrderStatus.isPending}
+                          >
+                            Aprovar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs border-destructive text-destructive hover:bg-destructive/10"
+                            onClick={() => updateOrderStatus.mutate({ id: o.id, status: "cancelado" })}
+                            disabled={updateOrderStatus.isPending}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
