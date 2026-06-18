@@ -12,7 +12,7 @@ const AdminUsers = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", phone: "", cpf: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", phone: "", cpf: "", email: "", password: "" });
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["admin-profiles"],
@@ -30,6 +30,20 @@ const AdminUsers = () => {
         cpf: editForm.cpf,
       }).eq("user_id", editingUser.user_id);
       if (error) throw error;
+
+      const emailChanged = editForm.email.trim() && editForm.email.trim() !== (editingUser.email ?? "");
+      const passwordChanged = !!editForm.password;
+      if (emailChanged || passwordChanged) {
+        const { data, error: fnError } = await supabase.functions.invoke("admin-update-user", {
+          body: {
+            user_id: editingUser.user_id,
+            ...(emailChanged ? { email: editForm.email.trim() } : {}),
+            ...(passwordChanged ? { password: editForm.password } : {}),
+          },
+        });
+        if (fnError) throw new Error((data as any)?.error || fnError.message);
+        if ((data as any)?.error) throw new Error((data as any).error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
@@ -52,7 +66,7 @@ const AdminUsers = () => {
   });
 
   const startEdit = (p: any) => {
-    setEditForm({ full_name: p.full_name || "", phone: p.phone || "", cpf: p.cpf || "" });
+    setEditForm({ full_name: p.full_name || "", phone: p.phone || "", cpf: p.cpf || "", email: p.email || "", password: "" });
     setEditingUser(p);
   };
 
@@ -143,6 +157,20 @@ const AdminUsers = () => {
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">CPF</label>
                 <Input value={editForm.cpf} onChange={e => setEditForm(f => ({ ...f, cpf: e.target.value }))} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
+                <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Nova senha</label>
+                <Input
+                  type="password"
+                  placeholder="Deixe em branco para manter a atual"
+                  value={editForm.password}
+                  onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">Mínimo de 6 caracteres. Preencha apenas para redefinir.</p>
               </div>
               <div className="flex gap-2 pt-2">
                 <Button variant="outline" className="flex-1" onClick={() => setEditingUser(null)}>Cancelar</Button>
