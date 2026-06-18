@@ -1,16 +1,30 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Loader2, Minus, Plus, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [quantity, setQuantity] = useState(1);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [redeemed, setRedeemed] = useState<{ quantity: number; total: number } | null>(null);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -40,28 +54,31 @@ const ProductDetail = () => {
   });
 
   const redeem = useMutation({
-    mutationFn: async (productId: string) => {
-      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId });
+    mutationFn: async ({ productId, qty }: { productId: string; qty: number }) => {
+      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId, _quantity: qty });
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      const total = Number(product?.price_fc ?? 0) * variables.qty;
+      setRedeemed({ quantity: variables.qty, total });
       toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
     },
     onError: (err: any) => toast({ title: "Não foi possível resgatar", description: err.message, variant: "destructive" }),
   });
 
   const balance = Number(profile?.balance ?? 0);
+  const unitPrice = Number(product?.price_fc ?? 0);
+  const totalPrice = unitPrice * quantity;
 
-  const handleRedeem = () => {
+  const handleConfirmRedeem = () => {
     if (!product) return;
-    if (balance < Number(product.price_fc)) {
+    if (balance < totalPrice) {
       toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
       return;
     }
-    if (!confirm(`Resgatar "${product.name}" por ${Number(product.price_fc)} FC?`)) return;
-    redeem.mutate(product.id);
+    setConfirmOpen(true);
   };
 
   if (isLoading) {
@@ -126,10 +143,59 @@ const ProductDetail = () => {
               Políticas de garantia e troca de produtos
             </p>
 
-            {isPartnerProduct && (
-              <Button className="mt-4 w-full" onClick={handleRedeem} disabled={redeem.isPending}>
-                {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
-              </Button>
+            {isPartnerProduct && !redeemed && (
+              <div className="mt-4 space-y-4">
+                <div>
+                  <p className="mb-2 text-sm font-medium text-foreground">Quantidade</p>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      disabled={quantity <= 1 || redeem.isPending}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-10 text-center text-lg font-semibold tabular-nums text-foreground">{quantity}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setQuantity((q) => Math.min(100, q + 1))}
+                      disabled={quantity >= 100 || redeem.isPending}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">Total</span>
+                  <span className="font-bold tabular-nums text-foreground">
+                    FC {totalPrice.toFixed(2).replace(".", ",")}
+                  </span>
+                </div>
+
+                <Button className="w-full" onClick={handleConfirmRedeem} disabled={redeem.isPending}>
+                  {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
+                </Button>
+              </div>
+            )}
+
+            {isPartnerProduct && redeemed && (
+              <div className="mt-4 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+                <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+                <div>
+                  <p className="text-base font-semibold text-foreground">Resgate concluído!</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {redeemed.quantity}x {product.name} • FC {redeemed.total.toFixed(2).replace(".", ",")}
+                  </p>
+                </div>
+                <Link to="/loja">
+                  <Button variant="outline" className="w-full">Voltar à loja</Button>
+                </Link>
+              </div>
             )}
           </div>
 
@@ -141,6 +207,24 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar resgate</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você está resgatando <span className="font-semibold text-foreground">{quantity}x {product.name}</span> por{" "}
+              <span className="font-semibold text-foreground">FC {totalPrice.toFixed(2).replace(".", ",")}</span>. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => redeem.mutate({ productId: product.id, qty: quantity })}>
+              Confirmar resgate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
