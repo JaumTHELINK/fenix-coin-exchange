@@ -135,6 +135,7 @@ const MinhaLoja = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
+  const [showStoreDialog, setShowStoreDialog] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: allProducts = [] } = useQuery({
