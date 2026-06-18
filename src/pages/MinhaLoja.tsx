@@ -96,7 +96,8 @@ const MinhaLoja = () => {
     if (!file) return;
     setLogoUploading(true);
     try {
-      const url = await uploadImage(file, "store");
+      if (!store?.id) throw new Error("Loja não encontrada.");
+      const url = await uploadImage(file, "store", store.id);
       setStoreForm((f) => ({ ...f, logo_url: url }));
       setLogoPreview(url);
       toast({ title: "Logo enviado!" });
@@ -156,7 +157,8 @@ const MinhaLoja = () => {
     if (!file) return;
     setUploading(true);
     try {
-      const url = await uploadImage(file, "product");
+      if (!store?.id) throw new Error("Loja não encontrada.");
+      const url = await uploadImage(file, "product", store.id);
       setForm((f) => ({ ...f, image_url: url }));
       setPreviewUrl(url);
       toast({ title: "Imagem enviada!" });
