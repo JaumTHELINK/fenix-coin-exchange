@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, PlusCircle } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Plus, Pencil, Trash2, Upload, X, Image as ImageIcon, RotateCcw, Eye, EyeOff, PlusCircle, Store } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProductForm {
@@ -31,6 +32,16 @@ const AdminProducts = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [newCategoryLabel, setNewCategoryLabel] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
+  const [tab, setTab] = useState<"system" | "partners">("system");
+  const [storeFilter, setStoreFilter] = useState<string>("all");
+
+  const { data: stores = [] } = useQuery({
+    queryKey: ["admin-stores-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("stores").select("id, name").order("name");
+      return data ?? [];
+    },
+  });
 
   const { data: categories = [] } = useQuery({
     queryKey: ["product-categories"],
@@ -77,7 +88,12 @@ const AdminProducts = () => {
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
 
-  const products = showInactive ? allProducts : allProducts.filter(p => p.active);
+  const visibleProducts = showInactive ? allProducts : allProducts.filter(p => p.active);
+  const products = visibleProducts.filter(p => !p.store_id);
+  const partnerProducts = visibleProducts
+    .filter(p => p.store_id)
+    .filter(p => storeFilter === "all" || p.store_id === storeFilter);
+  const storeName = (id: string | null) => stores.find(s => s.id === id)?.name ?? "—";
 
   const uploadImage = async (file: File): Promise<string> => {
     const ext = file.name.split(".").pop();
@@ -161,6 +177,15 @@ const AdminProducts = () => {
 
   return (
     <div className="space-y-4">
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "system" | "partners")} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="system">Produtos do Sistema</TabsTrigger>
+          <TabsTrigger value="partners">
+            <Store className="mr-2 h-4 w-4" /> Lojas Parceiras
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="system" className="space-y-4">
       <div className="flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={() => setShowInactive(!showInactive)}>
           {showInactive ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
@@ -303,6 +328,76 @@ const AdminProducts = () => {
           </table>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="partners" className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setShowInactive(!showInactive)}>
+              {showInactive ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+              {showInactive ? "Ocultar inativos" : "Mostrar inativos"}
+            </Button>
+            <Select value={storeFilter} onValueChange={setStoreFilter}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Filtrar por loja" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as lojas</SelectItem>
+                {stores.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="rounded-xl bg-card shadow-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Imagem</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nome</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Loja</th>
+                    <th className="px-4 py-3 text-left font-medium text-muted-foreground">Categoria</th>
+                    <th className="px-4 py-3 text-right font-medium text-muted-foreground">Preço (FC)</th>
+                    <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partnerProducts.map(p => (
+                    <tr key={p.id} className={`border-b border-border last:border-0 hover:bg-muted/30 ${!p.active ? "opacity-60" : ""}`}>
+                      <td className="px-4 py-3">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="h-10 w-10 rounded-md object-cover" />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
+                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{storeName(p.store_id)}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.category}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-foreground">{Number(p.price_fc)} FC</td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge variant={p.active ? "default" : "destructive"} className="text-xs">
+                          {p.active ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                  {partnerProducts.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                        Nenhum produto de loja parceira encontrado.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
