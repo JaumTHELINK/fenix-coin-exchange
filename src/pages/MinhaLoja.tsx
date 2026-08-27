@@ -580,6 +580,10 @@ const MinhaLoja = () => {
             <div className="grid gap-3 sm:grid-cols-2">
               <Input placeholder="Nome" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
               <Input placeholder="Preço (FC)" type="number" value={form.price_fc} onChange={(e) => setForm((f) => ({ ...f, price_fc: e.target.value }))} />
+              <div className="space-y-1">
+                <Input placeholder="Estoque (vazio = ilimitado)" type="number" min={0} step={1} value={form.stock} onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">Deixe vazio para estoque ilimitado. Resgates acima do estoque são bloqueados.</p>
+              </div>
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={form.featured} onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))} className="rounded" />
                 Destaque
