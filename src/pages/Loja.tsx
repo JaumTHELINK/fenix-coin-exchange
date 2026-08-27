@@ -30,7 +30,7 @@ const Loja = () => {
 
   const redeem = useMutation({
     mutationFn: async (productId: string) => {
-      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId });
+      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId, _quantity: 1 });
       if (error) throw error;
       return data;
     },
