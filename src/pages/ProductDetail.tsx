@@ -159,6 +159,11 @@ const ProductDetail = () => {
 
             {isPartnerProduct && !redeemed && (
               <div className="mt-4 space-y-4">
+                {stock !== null && (
+                  <p className={`text-sm font-medium ${outOfStock ? "text-destructive" : "text-muted-foreground"}`}>
+                    {outOfStock ? "Produto esgotado" : `${stock} unidade(s) em estoque`}
+                  </p>
+                )}
                 <div>
                   <p className="mb-2 text-sm font-medium text-foreground">Quantidade</p>
                   <div className="flex items-center gap-3">
@@ -167,7 +172,7 @@ const ProductDetail = () => {
                       variant="outline"
                       size="icon"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      disabled={quantity <= 1 || redeem.isPending}
+                      disabled={quantity <= 1 || redeem.isPending || outOfStock}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -176,8 +181,8 @@ const ProductDetail = () => {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => setQuantity((q) => Math.min(100, q + 1))}
-                      disabled={quantity >= 100 || redeem.isPending}
+                      onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
+                      disabled={quantity >= maxQty || redeem.isPending || outOfStock}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -191,8 +196,8 @@ const ProductDetail = () => {
                   </span>
                 </div>
 
-                <Button className="w-full" onClick={handleConfirmRedeem} disabled={redeem.isPending}>
-                  {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
+                <Button className="w-full" onClick={handleConfirmRedeem} disabled={redeem.isPending || outOfStock}>
+                  {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : outOfStock ? "Esgotado" : "Resgatar"}
                 </Button>
               </div>
             )}
