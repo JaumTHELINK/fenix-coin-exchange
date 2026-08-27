@@ -546,9 +546,10 @@ export type Database = {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
       }
-      redeem_store_product:
-        | { Args: { _product_id: string }; Returns: Json }
-        | { Args: { _product_id: string; _quantity?: number }; Returns: Json }
+      redeem_store_product: {
+        Args: { _product_id: string; _quantity?: number }
+        Returns: Json
+      }
       release_pending_earnings: { Args: never; Returns: number }
       release_pending_if_due: { Args: never; Returns: number }
     }
