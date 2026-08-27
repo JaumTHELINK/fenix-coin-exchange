@@ -18,9 +18,10 @@ interface ProductForm {
   price_fc: string;
   featured: boolean;
   image_url: string;
+  stock: string;
 }
 
-const emptyProduct: ProductForm = { name: "", description: "", price_fc: "", featured: false, image_url: "" };
+const emptyProduct: ProductForm = { name: "", description: "", price_fc: "", featured: false, image_url: "", stock: "" };
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
