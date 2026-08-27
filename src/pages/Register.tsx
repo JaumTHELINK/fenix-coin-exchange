@@ -18,13 +18,7 @@ const translateError = (msg: string): string => {
   return msg;
 };
 
-const passwordRules = [
-  { id: "length", label: "Pelo menos 8 caracteres", test: (p: string) => p.length >= 8 },
-  { id: "uppercase", label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
-  { id: "lowercase", label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
-  { id: "number", label: "Um número", test: (p: string) => /\d/.test(p) },
-  { id: "special", label: "Um caractere especial (!@#$...)", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
-];
+
 
 const Register = () => {
   const navigate = useNavigate();
