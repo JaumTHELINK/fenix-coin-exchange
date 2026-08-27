@@ -1,0 +1,158 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock integer;
+
+CREATE OR REPLACE FUNCTION public.redeem_store_product(_product_id uuid, _quantity integer DEFAULT 1)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_product record;
+  v_store record;
+  v_client record;
+  v_qty integer := COALESCE(_quantity, 1);
+  v_total numeric;
+  v_order_id uuid;
+  v_new_balance numeric;
+  v_new_stock integer;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Usuário não autenticado';
+  END IF;
+
+  IF v_qty < 1 OR v_qty > 100 THEN
+    RAISE EXCEPTION 'Quantidade inválida';
+  END IF;
+
+  -- Trava a linha do produto: impede resgates concorrentes de furarem o estoque.
+  SELECT * INTO v_product FROM public.products WHERE id = _product_id FOR UPDATE;
+  IF NOT FOUND OR NOT v_product.active THEN
+    RAISE EXCEPTION 'Produto indisponível';
+  END IF;
+  IF v_product.store_id IS NULL THEN
+    RAISE EXCEPTION 'Este produto não é de uma loja parceira';
+  END IF;
+
+  IF v_product.stock IS NOT NULL THEN
+    IF v_product.stock <= 0 THEN
+      RAISE EXCEPTION 'Produto esgotado';
+    END IF;
+    IF v_product.stock < v_qty THEN
+      RAISE EXCEPTION 'Estoque insuficiente: apenas % disponível(is)', v_product.stock;
+    END IF;
+  END IF;
+
+  SELECT * INTO v_store FROM public.stores WHERE id = v_product.store_id;
+  IF NOT FOUND OR NOT v_store.active THEN
+    RAISE EXCEPTION 'Loja indisponível';
+  END IF;
+  IF v_store.owner_id = v_uid THEN
+    RAISE EXCEPTION 'Você não pode resgatar produtos da sua própria loja';
+  END IF;
+
+  SELECT * INTO v_client FROM public.profiles WHERE user_id = v_uid FOR UPDATE;
+  IF NOT FOUND OR NOT v_client.is_active THEN
+    RAISE EXCEPTION 'Conta indisponível';
+  END IF;
+
+  v_total := v_product.price_fc * v_qty;
+
+  IF v_client.balance < v_total THEN
+    RAISE EXCEPTION 'Saldo insuficiente';
+  END IF;
+
+  PERFORM set_config('app.bypass_financial_protection', 'on', true);
+
+  UPDATE public.profiles
+    SET balance = balance - v_total
+    WHERE user_id = v_uid
+    RETURNING balance INTO v_new_balance;
+
+  IF v_new_balance < 0 THEN
+    RAISE EXCEPTION 'Saldo insuficiente';
+  END IF;
+
+  IF v_product.stock IS NOT NULL THEN
+    UPDATE public.products
+      SET stock = stock - v_qty
+      WHERE id = v_product.id
+      RETURNING stock INTO v_new_stock;
+    IF v_new_stock < 0 THEN
+      RAISE EXCEPTION 'Estoque insuficiente';
+    END IF;
+  END IF;
+
+  INSERT INTO public.transactions (user_id, type, amount, description, category)
+  VALUES (v_uid, 'debit', v_total, 'Resgate: ' || v_qty || 'x ' || v_product.name || ' (' || v_store.name || ')', 'resgate');
+
+  UPDATE public.profiles
+    SET pending_balance = pending_balance + v_total
+    WHERE user_id = v_store.owner_id;
+
+  INSERT INTO public.orders (store_id, customer_id, product_id, product_name, quantity, unit_price_fc, total_fc, customer_name, customer_phone)
+  VALUES (v_store.id, v_uid, v_product.id, v_product.name, v_qty, v_product.price_fc, v_total, v_client.full_name, v_client.phone)
+  RETURNING id INTO v_order_id;
+
+  RETURN jsonb_build_object('success', true, 'amount', v_total, 'quantity', v_qty, 'order_id', v_order_id);
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.cancel_store_order(_order_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_uid uuid := auth.uid();
+  v_order record;
+  v_store record;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Usuário não autenticado';
+  END IF;
+
+  SELECT * INTO v_order FROM public.orders WHERE id = _order_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Pedido não encontrado';
+  END IF;
+
+  SELECT * INTO v_store FROM public.stores WHERE id = v_order.store_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Loja não encontrada';
+  END IF;
+
+  IF v_store.owner_id <> v_uid AND NOT has_role(v_uid, 'admin') THEN
+    RAISE EXCEPTION 'Sem permissão para cancelar este pedido';
+  END IF;
+
+  IF v_order.status <> 'pendente' THEN
+    RAISE EXCEPTION 'Apenas pedidos pendentes podem ser cancelados';
+  END IF;
+
+  PERFORM set_config('app.bypass_financial_protection', 'on', true);
+
+  PERFORM 1 FROM public.profiles WHERE user_id = v_order.customer_id FOR UPDATE;
+
+  UPDATE public.profiles SET balance = balance + v_order.total_fc WHERE user_id = v_order.customer_id;
+  INSERT INTO public.transactions (user_id, type, amount, description, category)
+  VALUES (v_order.customer_id, 'credit', v_order.total_fc,
+          'Estorno: ' || v_order.quantity || 'x ' || v_order.product_name || ' (' || v_store.name || ')', 'estorno');
+
+  UPDATE public.profiles
+    SET pending_balance = GREATEST(pending_balance - v_order.total_fc, 0)
+    WHERE user_id = v_store.owner_id;
+
+  -- Devolve o estoque quando o produto controla quantidade
+  IF v_order.product_id IS NOT NULL THEN
+    UPDATE public.products
+      SET stock = stock + v_order.quantity
+      WHERE id = v_order.product_id AND stock IS NOT NULL;
+  END IF;
+
+  UPDATE public.orders SET status = 'cancelado' WHERE id = _order_id;
+
+  RETURN jsonb_build_object('success', true, 'refunded', v_order.total_fc);
+END;
+$function$;
