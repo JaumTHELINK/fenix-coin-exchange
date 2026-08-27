@@ -61,6 +61,8 @@ const ProductDetail = () => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries({ queryKey: ["partner-products"] });
       const total = Number(product?.price_fc ?? 0) * variables.qty;
       setRedeemed({ quantity: variables.qty, total });
       toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
@@ -71,9 +73,21 @@ const ProductDetail = () => {
   const balance = Number(profile?.balance ?? 0);
   const unitPrice = Number(product?.price_fc ?? 0);
   const totalPrice = unitPrice * quantity;
+  const stock: number | null =
+    product?.stock === null || product?.stock === undefined ? null : Number(product.stock);
+  const outOfStock = stock !== null && stock <= 0;
+  const maxQty = stock === null ? 100 : Math.min(100, stock);
 
   const handleConfirmRedeem = () => {
     if (!product) return;
+    if (outOfStock) {
+      toast({ title: "Produto esgotado", description: "Este produto não tem estoque disponível.", variant: "destructive" });
+      return;
+    }
+    if (stock !== null && quantity > stock) {
+      toast({ title: "Estoque insuficiente", description: `Apenas ${stock} unidade(s) disponível(is).`, variant: "destructive" });
+      return;
+    }
     if (balance < totalPrice) {
       toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
       return;
@@ -145,6 +159,11 @@ const ProductDetail = () => {
 
             {isPartnerProduct && !redeemed && (
               <div className="mt-4 space-y-4">
+                {stock !== null && (
+                  <p className={`text-sm font-medium ${outOfStock ? "text-destructive" : "text-muted-foreground"}`}>
+                    {outOfStock ? "Produto esgotado" : `${stock} unidade(s) em estoque`}
+                  </p>
+                )}
                 <div>
                   <p className="mb-2 text-sm font-medium text-foreground">Quantidade</p>
                   <div className="flex items-center gap-3">
@@ -153,7 +172,7 @@ const ProductDetail = () => {
                       variant="outline"
                       size="icon"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      disabled={quantity <= 1 || redeem.isPending}
+                      disabled={quantity <= 1 || redeem.isPending || outOfStock}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -162,8 +181,8 @@ const ProductDetail = () => {
                       type="button"
                       variant="outline"
                       size="icon"
-                      onClick={() => setQuantity((q) => Math.min(100, q + 1))}
-                      disabled={quantity >= 100 || redeem.isPending}
+                      onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
+                      disabled={quantity >= maxQty || redeem.isPending || outOfStock}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -177,8 +196,8 @@ const ProductDetail = () => {
                   </span>
                 </div>
 
-                <Button className="w-full" onClick={handleConfirmRedeem} disabled={redeem.isPending}>
-                  {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
+                <Button className="w-full" onClick={handleConfirmRedeem} disabled={redeem.isPending || outOfStock}>
+                  {redeem.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : outOfStock ? "Esgotado" : "Resgatar"}
                 </Button>
               </div>
             )}

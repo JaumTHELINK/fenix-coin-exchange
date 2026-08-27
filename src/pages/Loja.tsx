@@ -36,12 +36,18 @@ const Loja = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
     },
     onError: (err: any) => toast({ title: "Não foi possível resgatar", description: err.message, variant: "destructive" }),
   });
 
   const handleRedeem = (product: ProductType) => {
+    const stock = product.stock === null || product.stock === undefined ? null : Number(product.stock);
+    if (stock !== null && stock <= 0) {
+      toast({ title: "Produto esgotado", description: "Este produto não tem estoque disponível.", variant: "destructive" });
+      return;
+    }
     if (balance < Number(product.price_fc)) {
       toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
       return;
@@ -230,6 +236,7 @@ interface ProductType {
   category: string;
   image_url: string | null;
   featured: boolean;
+  stock?: number | null;
 }
 
 const ProductCard = ({
@@ -240,32 +247,41 @@ const ProductCard = ({
   product: ProductType;
   onRedeem?: () => void;
   redeeming?: boolean;
-}) => (
-  <div className="group rounded-xl bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover flex flex-col">
-    <Link to={`/loja/${product.id}`} className="block">
-      <div className="mb-3 flex h-32 items-center justify-center rounded-lg bg-muted overflow-hidden">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+}) => {
+  const stock = product.stock === null || product.stock === undefined ? null : Number(product.stock);
+  const outOfStock = stock !== null && stock <= 0;
+  return (
+    <div className="group rounded-xl bg-card p-4 shadow-card transition-shadow hover:shadow-card-hover flex flex-col">
+      <Link to={`/loja/${product.id}`} className="block">
+        <div className="mb-3 flex h-32 items-center justify-center rounded-lg bg-muted overflow-hidden">
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.name} className={`h-full w-full object-cover transition-transform group-hover:scale-110 ${outOfStock ? "opacity-50" : ""}`} />
+          ) : (
+            <ShoppingBag className="h-8 w-8 text-muted-foreground transition-transform group-hover:scale-110" />
+          )}
+        </div>
+        <p className="text-sm font-medium text-foreground">{product.name}</p>
+        {product.description && (
+          <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+        )}
+      </Link>
+      {stock !== null && (
+        <p className={`mt-2 text-xs font-medium ${outOfStock ? "text-destructive" : "text-muted-foreground"}`}>
+          {outOfStock ? "Esgotado" : `${stock} em estoque`}
+        </p>
+      )}
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-sm font-bold text-primary tabular-nums">{Number(product.price_fc)} FC</span>
+        {onRedeem ? (
+          <Button size="sm" onClick={onRedeem} disabled={redeeming || outOfStock}>
+            {redeeming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : outOfStock ? "Esgotado" : "Resgatar"}
+          </Button>
         ) : (
-          <ShoppingBag className="h-8 w-8 text-muted-foreground transition-transform group-hover:scale-110" />
+          <span className="text-xs text-muted-foreground">Informativo</span>
         )}
       </div>
-      <p className="text-sm font-medium text-foreground">{product.name}</p>
-      {product.description && (
-        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{product.description}</p>
-      )}
-    </Link>
-    <div className="mt-3 flex items-center justify-between">
-      <span className="text-sm font-bold text-primary tabular-nums">{Number(product.price_fc)} FC</span>
-      {onRedeem ? (
-        <Button size="sm" onClick={onRedeem} disabled={redeeming}>
-          {redeeming ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Resgatar"}
-        </Button>
-      ) : (
-        <span className="text-xs text-muted-foreground">Informativo</span>
-      )}
     </div>
-  </div>
-);
+  );
+};
 
 export default Loja;

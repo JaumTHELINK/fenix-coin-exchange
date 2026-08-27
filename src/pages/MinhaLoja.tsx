@@ -18,9 +18,10 @@ interface ProductForm {
   price_fc: string;
   featured: boolean;
   image_url: string;
+  stock: string;
 }
 
-const emptyProduct: ProductForm = { name: "", description: "", price_fc: "", featured: false, image_url: "" };
+const emptyProduct: ProductForm = { name: "", description: "", price_fc: "", featured: false, image_url: "", stock: "" };
 
 const formatPhone = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -179,6 +180,7 @@ const MinhaLoja = () => {
         featured: form.featured,
         image_url: form.image_url || null,
         store_id: store!.id,
+        stock: form.stock.trim() === "" ? null : Math.max(0, Math.floor(Number(form.stock))),
       };
       if (editing) {
         const { error } = await supabase.from("products").update(payload).eq("id", editing);
@@ -344,7 +346,7 @@ const MinhaLoja = () => {
   );
 
   const startEdit = (p: any) => {
-    setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "" });
+    setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "", stock: p.stock === null || p.stock === undefined ? "" : String(p.stock) });
     setPreviewUrl(p.image_url || null);
     setEditing(p.id);
     setShowForm(true);
@@ -578,6 +580,10 @@ const MinhaLoja = () => {
             <div className="grid gap-3 sm:grid-cols-2">
               <Input placeholder="Nome" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
               <Input placeholder="Preço (FC)" type="number" value={form.price_fc} onChange={(e) => setForm((f) => ({ ...f, price_fc: e.target.value }))} />
+              <div className="space-y-1">
+                <Input placeholder="Estoque (vazio = ilimitado)" type="number" min={0} step={1} value={form.stock} onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">Deixe vazio para estoque ilimitado. Resgates acima do estoque são bloqueados.</p>
+              </div>
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={form.featured} onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))} className="rounded" />
                 Destaque
@@ -614,6 +620,7 @@ const MinhaLoja = () => {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Imagem</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nome</th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">Preço (FC)</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Estoque</th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">Ações</th>
                 </tr>
@@ -632,6 +639,15 @@ const MinhaLoja = () => {
                     </td>
                     <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-foreground">{Number(p.price_fc)} FC</td>
+                    <td className="px-4 py-3 text-center">
+                      {p.stock === null || p.stock === undefined ? (
+                        <span className="text-xs text-muted-foreground">Ilimitado</span>
+                      ) : (
+                        <Badge variant={p.stock > 0 ? "secondary" : "destructive"} className="text-xs tabular-nums">
+                          {p.stock > 0 ? `${p.stock} un.` : "Esgotado"}
+                        </Badge>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <Badge variant={p.active ? "default" : "destructive"} className="text-xs">
                         {p.active ? "Ativo" : "Inativo"}
