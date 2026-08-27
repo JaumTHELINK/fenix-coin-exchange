@@ -36,12 +36,18 @@ const Loja = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
     },
     onError: (err: any) => toast({ title: "Não foi possível resgatar", description: err.message, variant: "destructive" }),
   });
 
   const handleRedeem = (product: ProductType) => {
+    const stock = product.stock === null || product.stock === undefined ? null : Number(product.stock);
+    if (stock !== null && stock <= 0) {
+      toast({ title: "Produto esgotado", description: "Este produto não tem estoque disponível.", variant: "destructive" });
+      return;
+    }
     if (balance < Number(product.price_fc)) {
       toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
       return;
