@@ -180,6 +180,7 @@ const MinhaLoja = () => {
         featured: form.featured,
         image_url: form.image_url || null,
         store_id: store!.id,
+        stock: form.stock.trim() === "" ? null : Math.max(0, Math.floor(Number(form.stock))),
       };
       if (editing) {
         const { error } = await supabase.from("products").update(payload).eq("id", editing);
