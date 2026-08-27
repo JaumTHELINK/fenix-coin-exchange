@@ -620,6 +620,7 @@ const MinhaLoja = () => {
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Imagem</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nome</th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">Preço (FC)</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Estoque</th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">Status</th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">Ações</th>
                 </tr>
