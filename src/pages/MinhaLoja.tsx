@@ -345,7 +345,7 @@ const MinhaLoja = () => {
   );
 
   const startEdit = (p: any) => {
-    setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "" });
+    setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), featured: p.featured, image_url: p.image_url || "", stock: p.stock === null || p.stock === undefined ? "" : String(p.stock) });
     setPreviewUrl(p.image_url || null);
     setEditing(p.id);
     setShowForm(true);
