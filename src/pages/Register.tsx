@@ -7,36 +7,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-const formatCPF = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  return digits
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-};
+import { formatCPF, formatPhone, validateCPF, passwordRules } from "@/lib/validation";
 
-const formatPhone = (value: string) => {
-  const digits = value.replace(/\D/g, "").slice(0, 11);
-  if (digits.length <= 2) return digits;
-  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-};
-
-const validateCPF = (cpf: string): boolean => {
-  const digits = cpf.replace(/\D/g, "");
-  if (digits.length !== 11) return false;
-  if (/^(\d)\1+$/.test(digits)) return false;
-  let sum = 0;
-  for (let i = 0; i < 9; i++) sum += parseInt(digits[i]) * (10 - i);
-  let rest = (sum * 10) % 11;
-  if (rest === 10) rest = 0;
-  if (rest !== parseInt(digits[9])) return false;
-  sum = 0;
-  for (let i = 0; i < 10; i++) sum += parseInt(digits[i]) * (11 - i);
-  rest = (sum * 10) % 11;
-  if (rest === 10) rest = 0;
-  return rest === parseInt(digits[10]);
-};
 
 const translateError = (msg: string): string => {
   if (msg.includes("User already registered")) return "Este e-mail já está cadastrado. Tente fazer login.";
@@ -46,13 +18,7 @@ const translateError = (msg: string): string => {
   return msg;
 };
 
-const passwordRules = [
-  { id: "length", label: "Pelo menos 8 caracteres", test: (p: string) => p.length >= 8 },
-  { id: "uppercase", label: "Uma letra maiúscula", test: (p: string) => /[A-Z]/.test(p) },
-  { id: "lowercase", label: "Uma letra minúscula", test: (p: string) => /[a-z]/.test(p) },
-  { id: "number", label: "Um número", test: (p: string) => /\d/.test(p) },
-  { id: "special", label: "Um caractere especial (!@#$...)", test: (p: string) => /[^A-Za-z0-9]/.test(p) },
-];
+
 
 const Register = () => {
   const navigate = useNavigate();
