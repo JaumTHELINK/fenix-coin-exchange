@@ -640,6 +640,15 @@ const MinhaLoja = () => {
                     <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-foreground">{Number(p.price_fc)} FC</td>
                     <td className="px-4 py-3 text-center">
+                      {p.stock === null || p.stock === undefined ? (
+                        <span className="text-xs text-muted-foreground">Ilimitado</span>
+                      ) : (
+                        <Badge variant={p.stock > 0 ? "secondary" : "destructive"} className="text-xs tabular-nums">
+                          {p.stock > 0 ? `${p.stock} un.` : "Esgotado"}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
                       <Badge variant={p.active ? "default" : "destructive"} className="text-xs">
                         {p.active ? "Ativo" : "Inativo"}
                       </Badge>
