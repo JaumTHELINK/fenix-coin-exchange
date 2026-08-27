@@ -61,6 +61,8 @@ const ProductDetail = () => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["product", id] });
+      queryClient.invalidateQueries({ queryKey: ["partner-products"] });
       const total = Number(product?.price_fc ?? 0) * variables.qty;
       setRedeemed({ quantity: variables.qty, total });
       toast({ title: "Resgate realizado!", description: "O produto foi resgatado com sucesso." });
@@ -71,6 +73,10 @@ const ProductDetail = () => {
   const balance = Number(profile?.balance ?? 0);
   const unitPrice = Number(product?.price_fc ?? 0);
   const totalPrice = unitPrice * quantity;
+  const stock: number | null =
+    product?.stock === null || product?.stock === undefined ? null : Number(product.stock);
+  const outOfStock = stock !== null && stock <= 0;
+  const maxQty = stock === null ? 100 : Math.min(100, stock);
 
   const handleConfirmRedeem = () => {
     if (!product) return;
