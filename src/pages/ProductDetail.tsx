@@ -80,6 +80,14 @@ const ProductDetail = () => {
 
   const handleConfirmRedeem = () => {
     if (!product) return;
+    if (outOfStock) {
+      toast({ title: "Produto esgotado", description: "Este produto não tem estoque disponível.", variant: "destructive" });
+      return;
+    }
+    if (stock !== null && quantity > stock) {
+      toast({ title: "Estoque insuficiente", description: `Apenas ${stock} unidade(s) disponível(is).`, variant: "destructive" });
+      return;
+    }
     if (balance < totalPrice) {
       toast({ title: "Saldo insuficiente", description: "Você não tem Fênix Coins suficientes para este resgate.", variant: "destructive" });
       return;
