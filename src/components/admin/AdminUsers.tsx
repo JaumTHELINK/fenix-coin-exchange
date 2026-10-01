@@ -41,7 +41,14 @@ const AdminUsers = () => {
             ...(passwordChanged ? { password: editForm.password } : {}),
           },
         });
-        if (fnError) throw new Error((data as any)?.error || fnError.message);
+        if (fnError) {
+          let msg = (data as any)?.error as string | undefined;
+          try {
+            const body = await (fnError as any).context?.json?.();
+            if (body?.error) msg = body.error;
+          } catch { /* ignore parse errors */ }
+          throw new Error(msg || "Não foi possível atualizar o usuário.");
+        }
         if ((data as any)?.error) throw new Error((data as any).error);
       }
     },

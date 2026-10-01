@@ -83,7 +83,16 @@ Deno.serve(async (req) => {
 
     const { error: updateErr } = await admin.auth.admin.updateUserById(user_id, updates);
     if (updateErr) {
-      return jsonResponse({ error: updateErr.message }, 400);
+      const msg = updateErr.message || "";
+      let friendly = "Não foi possível atualizar o usuário.";
+      if (/weak|easy to guess|pwned/i.test(msg)) {
+        friendly = "Senha muito fraca ou já vazada em ataques conhecidos. Use uma senha mais forte (8+ caracteres, maiúsculas, minúsculas, números e símbolos).";
+      } else if (/already|registered|exists/i.test(msg)) {
+        friendly = "Este email já está em uso por outra conta.";
+      } else if (/password/i.test(msg)) {
+        friendly = "Senha inválida. Verifique os requisitos e tente novamente.";
+      }
+      return jsonResponse({ error: friendly }, 400);
     }
 
     if (updates.email) {
