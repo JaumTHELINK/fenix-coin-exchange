@@ -189,14 +189,54 @@ const AdminUsers = () => {
                     <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">{Number(profile.balance)} FC</td>
                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{Number(profile.total_recycled_kg)} kg</td>
                     <td className="px-4 py-3 text-center">
-                      <Badge variant={isActive ? "default" : "destructive"} className="text-xs">
-                        {isActive ? "Ativo" : "Inativo"}
-                      </Badge>
+                      <div className="flex flex-wrap justify-center gap-1">
+                        <Badge variant={isActive ? "default" : "destructive"} className="text-xs">
+                          {isActive ? "Ativo" : "Inativo"}
+                        </Badge>
+                        {hasRole(profile.user_id, "admin") && <Badge variant="secondary" className="text-xs">Admin</Badge>}
+                        {hasRole(profile.user_id, "lojista") && <Badge variant="outline" className="text-xs">Loja parceira</Badge>}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex justify-center gap-1">
                         <Button size="sm" variant="ghost" title="Editar" onClick={() => startEdit(profile)}>
                           <Pencil className="h-3 w-3" />
+                        </Button>
+                        {(() => {
+                          const isAdm = hasRole(profile.user_id, "admin");
+                          return (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title={isAdm ? "Remover administrador" : "Tornar administrador"}
+                              disabled={isAdm && profile.user_id === user?.id}
+                              onClick={() => {
+                                const msg = isAdm
+                                  ? `Remover o acesso de administrador de ${profile.full_name || profile.email}?`
+                                  : `Tornar ${profile.full_name || profile.email} administrador? Essa pessoa terá acesso total ao painel.`;
+                                if (!confirm(msg)) return;
+                                toggleAdmin.mutate({ userId: profile.user_id, makeAdmin: !isAdm });
+                              }}
+                            >
+                              {isAdm ? <ShieldOff className="h-3 w-3 text-destructive" /> : <Shield className="h-3 w-3 text-primary" />}
+                            </Button>
+                          );
+                        })()}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title={hasRole(profile.user_id, "lojista") ? "Remover loja parceira" : "Tornar loja parceira"}
+                          onClick={() => {
+                            if (hasRole(profile.user_id, "lojista")) {
+                              if (!confirm("Remover o acesso de loja parceira? A loja será desativada.")) return;
+                              removeLojista.mutate(profile.user_id);
+                            } else {
+                              setStoreName("");
+                              setStoreFor(profile);
+                            }
+                          }}
+                        >
+                          <Store className={`h-3 w-3 ${hasRole(profile.user_id, "lojista") ? "text-destructive" : "text-primary"}`} />
                         </Button>
                         <Button
                           size="sm"
@@ -221,6 +261,24 @@ const AdminUsers = () => {
           </table>
         </div>
       </div>
+
+      {storeFor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20" onClick={() => setStoreFor(null)}>
+          <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-card-hover" onClick={e => e.stopPropagation()}>
+            <h3 className="mb-1 text-lg font-semibold text-foreground">Tornar loja parceira</h3>
+            <p className="mb-4 text-sm text-muted-foreground">{storeFor.full_name || storeFor.email}</p>
+            <label className="mb-1 block text-sm font-medium text-foreground">Nome da loja</label>
+            <Input maxLength={100} value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Ex.: Padaria Central" />
+            <p className="mt-1 text-xs text-muted-foreground">Os demais dados da loja podem ser completados em "Lojas Parceiras" ou pelo próprio lojista.</p>
+            <div className="flex gap-2 pt-4">
+              <Button variant="outline" className="flex-1" onClick={() => setStoreFor(null)}>Cancelar</Button>
+              <Button className="flex-1" disabled={storeName.trim().length < 2 || makeLojista.isPending} onClick={() => makeLojista.mutate()}>
+                Confirmar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editingUser && (
