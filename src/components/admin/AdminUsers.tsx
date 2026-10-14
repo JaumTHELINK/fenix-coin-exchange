@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Pencil, UserCheck, UserX } from "lucide-react";
+import { Search, Pencil, UserCheck, UserX, Shield, ShieldOff, Store } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 const AdminUsers = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<any | null>(null);
@@ -68,6 +70,79 @@ const AdminUsers = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
       toast({ title: "Status do usuário atualizado!" });
+    },
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
+  const { data: roles = [] } = useQuery({
+    queryKey: ["admin-user-roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_roles").select("user_id, role");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const hasRole = (uid: string, role: string) => roles.some(r => r.user_id === uid && r.role === role);
+
+  const toggleAdmin = useMutation({
+    mutationFn: async ({ userId, makeAdmin }: { userId: string; makeAdmin: boolean }) => {
+      if (!makeAdmin && userId === user?.id) throw new Error("Você não pode remover seu próprio acesso de administrador.");
+      if (makeAdmin) {
+        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
+        if (error && error.code !== "23505") throw error;
+      } else {
+        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
+        if (error) throw error;
+      }
+    },
+    onSuccess: (_d, v) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
+      toast({ title: v.makeAdmin ? "Usuário agora é administrador" : "Acesso de administrador removido", description: "A pessoa precisa sair e entrar novamente." });
+    },
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
+  const [storeFor, setStoreFor] = useState<any | null>(null);
+  const [storeName, setStoreName] = useState("");
+
+  const makeLojista = useMutation({
+    mutationFn: async () => {
+      const name = storeName.trim();
+      if (name.length < 2 || name.length > 100) throw new Error("Informe um nome de loja entre 2 e 100 caracteres.");
+      const { data: existing } = await supabase.from("stores").select("id").eq("owner_id", storeFor.user_id).maybeSingle();
+      if (!existing) {
+        const { error } = await supabase.from("stores").insert({
+          owner_id: storeFor.user_id, name, email: storeFor.email || null, phone: storeFor.phone || null,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("stores").update({ active: true }).eq("id", existing.id);
+        if (error) throw error;
+      }
+      const { error: rErr } = await supabase.from("user_roles").insert({ user_id: storeFor.user_id, role: "lojista" });
+      if (rErr && rErr.code !== "23505") throw rErr;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      setStoreFor(null);
+      setStoreName("");
+      toast({ title: "Loja parceira criada!", description: "A pessoa precisa sair e entrar novamente." });
+    },
+    onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
+  });
+
+  const removeLojista = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "lojista");
+      if (error) throw error;
+      const { error: sErr } = await supabase.from("stores").update({ active: false }).eq("owner_id", userId);
+      if (sErr) throw sErr;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      toast({ title: "Acesso de loja parceira removido", description: "A loja foi desativada." });
     },
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });
