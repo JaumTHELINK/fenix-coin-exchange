@@ -124,7 +124,7 @@ const AdminUsers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stores-all"] });
       setStoreFor(null);
       setStoreName("");
       toast({ title: "Loja parceira criada!", description: "A pessoa precisa sair e entrar novamente." });
@@ -141,7 +141,7 @@ const AdminUsers = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-stores-all"] });
       toast({ title: "Acesso de loja parceira removido", description: "A loja foi desativada." });
     },
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
