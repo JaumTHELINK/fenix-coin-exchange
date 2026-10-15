@@ -295,9 +295,6 @@ const AdminUsers = () => {
                 <Input value={editForm.cpf} onChange={e => setEditForm(f => ({ ...f, cpf: e.target.value }))} />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Nova senha (deixe em branco para manter)</label>
-              </div>
-              <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Nova senha</label>
                 <Input
                   type="password"
