@@ -1,0 +1,2 @@
+ALTER TABLE public.material_rates ADD COLUMN IF NOT EXISTS examples text NOT NULL DEFAULT '';
+COMMENT ON COLUMN public.material_rates.examples IS 'Optional examples/specification of accepted items for this material (e.g. PET bottles, bags)';

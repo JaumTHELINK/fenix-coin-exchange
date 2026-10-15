@@ -89,6 +89,7 @@ export type Database = {
       material_rates: {
         Row: {
           active: boolean
+          examples: string
           fenix_per_unit: number
           id: string
           material: string
@@ -97,6 +98,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          examples?: string
           fenix_per_unit?: number
           id?: string
           material: string
@@ -105,6 +107,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          examples?: string
           fenix_per_unit?: number
           id?: string
           material?: string
