@@ -14,7 +14,7 @@ const AdminUsers = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", phone: "", cpf: "", email: "", password: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", phone: "", cpf: "", password: "" });
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["admin-profiles"],
@@ -33,14 +33,12 @@ const AdminUsers = () => {
       }).eq("user_id", editingUser.user_id);
       if (error) throw error;
 
-      const emailChanged = editForm.email.trim() && editForm.email.trim() !== (editingUser.email ?? "");
       const passwordChanged = !!editForm.password;
-      if (emailChanged || passwordChanged) {
+      if (passwordChanged) {
         const { data, error: fnError } = await supabase.functions.invoke("admin-update-user", {
           body: {
             user_id: editingUser.user_id,
-            ...(emailChanged ? { email: editForm.email.trim() } : {}),
-            ...(passwordChanged ? { password: editForm.password } : {}),
+            password: editForm.password,
           },
         });
         if (fnError) {
