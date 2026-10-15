@@ -14,7 +14,7 @@ const AdminUsers = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", phone: "", cpf: "", email: "", password: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", phone: "", cpf: "", password: "" });
 
   const { data: profiles = [] } = useQuery({
     queryKey: ["admin-profiles"],
@@ -33,14 +33,12 @@ const AdminUsers = () => {
       }).eq("user_id", editingUser.user_id);
       if (error) throw error;
 
-      const emailChanged = editForm.email.trim() && editForm.email.trim() !== (editingUser.email ?? "");
       const passwordChanged = !!editForm.password;
-      if (emailChanged || passwordChanged) {
+      if (passwordChanged) {
         const { data, error: fnError } = await supabase.functions.invoke("admin-update-user", {
           body: {
             user_id: editingUser.user_id,
-            ...(emailChanged ? { email: editForm.email.trim() } : {}),
-            ...(passwordChanged ? { password: editForm.password } : {}),
+            password: editForm.password,
           },
         });
         if (fnError) {
@@ -112,7 +110,7 @@ const AdminUsers = () => {
       const { data: existing } = await supabase.from("stores").select("id").eq("owner_id", storeFor.user_id).maybeSingle();
       if (!existing) {
         const { error } = await supabase.from("stores").insert({
-          owner_id: storeFor.user_id, name, email: storeFor.email || null, phone: storeFor.phone || null,
+          owner_id: storeFor.user_id, name, phone: storeFor.phone || null,
         });
         if (error) throw error;
       } else {
@@ -148,20 +146,20 @@ const AdminUsers = () => {
   });
 
   const startEdit = (p: any) => {
-    setEditForm({ full_name: p.full_name || "", phone: p.phone || "", cpf: p.cpf || "", email: p.email || "", password: "" });
+    setEditForm({ full_name: p.full_name || "", phone: p.phone || "", cpf: p.cpf || "", password: "" });
     setEditingUser(p);
   };
 
   const filtered = profiles.filter(p =>
     (p.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-    (p.email?.toLowerCase() || "").includes(search.toLowerCase())
+    (p.cpf || "").includes(search)
   );
 
   return (
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Buscar por nome ou email..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
+        <Input placeholder="Buscar por nome ou CPF..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       <div className="rounded-xl bg-card shadow-card overflow-hidden">
@@ -170,7 +168,6 @@ const AdminUsers = () => {
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nome</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">CPF</th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">Saldo (FC)</th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">Total Reciclado</th>
@@ -184,7 +181,6 @@ const AdminUsers = () => {
                 return (
                   <tr key={profile.id} className={`border-b border-border last:border-0 hover:bg-muted/30 ${!isActive ? "opacity-60" : ""}`}>
                     <td className="px-4 py-3 font-medium text-foreground">{profile.full_name || "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{profile.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{profile.cpf || "—"}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">{Number(profile.balance)} FC</td>
                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{Number(profile.total_recycled_kg)} kg</td>
@@ -212,8 +208,8 @@ const AdminUsers = () => {
                               disabled={isAdm && profile.user_id === user?.id}
                               onClick={() => {
                                 const msg = isAdm
-                                  ? `Remover o acesso de administrador de ${profile.full_name || profile.email}?`
-                                  : `Tornar ${profile.full_name || profile.email} administrador? Essa pessoa terá acesso total ao painel.`;
+                                  ? `Remover o acesso de administrador de ${profile.full_name || profile.cpf}?`
+                                  : `Tornar ${profile.full_name || profile.cpf} administrador? Essa pessoa terá acesso total ao painel.`;
                                 if (!confirm(msg)) return;
                                 toggleAdmin.mutate({ userId: profile.user_id, makeAdmin: !isAdm });
                               }}
@@ -266,7 +262,7 @@ const AdminUsers = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20" onClick={() => setStoreFor(null)}>
           <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-card-hover" onClick={e => e.stopPropagation()}>
             <h3 className="mb-1 text-lg font-semibold text-foreground">Tornar loja parceira</h3>
-            <p className="mb-4 text-sm text-muted-foreground">{storeFor.full_name || storeFor.email}</p>
+            <p className="mb-4 text-sm text-muted-foreground">{storeFor.full_name || storeFor.cpf}</p>
             <label className="mb-1 block text-sm font-medium text-foreground">Nome da loja</label>
             <Input maxLength={100} value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Ex.: Padaria Central" />
             <p className="mt-1 text-xs text-muted-foreground">Os demais dados da loja podem ser completados em "Lojas Parceiras" ou pelo próprio lojista.</p>
@@ -297,10 +293,6 @@ const AdminUsers = () => {
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">CPF</label>
                 <Input value={editForm.cpf} onChange={e => setEditForm(f => ({ ...f, cpf: e.target.value }))} />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
-                <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Nova senha</label>
