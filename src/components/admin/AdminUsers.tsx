@@ -110,7 +110,7 @@ const AdminUsers = () => {
       const { data: existing } = await supabase.from("stores").select("id").eq("owner_id", storeFor.user_id).maybeSingle();
       if (!existing) {
         const { error } = await supabase.from("stores").insert({
-          owner_id: storeFor.user_id, name, email: storeFor.email || null, phone: storeFor.phone || null,
+          owner_id: storeFor.user_id, name, phone: storeFor.phone || null,
         });
         if (error) throw error;
       } else {
@@ -146,20 +146,20 @@ const AdminUsers = () => {
   });
 
   const startEdit = (p: any) => {
-    setEditForm({ full_name: p.full_name || "", phone: p.phone || "", cpf: p.cpf || "", email: p.email || "", password: "" });
+    setEditForm({ full_name: p.full_name || "", phone: p.phone || "", cpf: p.cpf || "", password: "" });
     setEditingUser(p);
   };
 
   const filtered = profiles.filter(p =>
     (p.full_name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-    (p.email?.toLowerCase() || "").includes(search.toLowerCase())
+    (p.cpf || "").includes(search)
   );
 
   return (
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Buscar por nome ou email..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
+        <Input placeholder="Buscar por nome ou CPF..." className="pl-10" value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       <div className="rounded-xl bg-card shadow-card overflow-hidden">
@@ -168,7 +168,6 @@ const AdminUsers = () => {
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nome</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">CPF</th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">Saldo (FC)</th>
                 <th className="px-4 py-3 text-right font-medium text-muted-foreground">Total Reciclado</th>
@@ -182,7 +181,6 @@ const AdminUsers = () => {
                 return (
                   <tr key={profile.id} className={`border-b border-border last:border-0 hover:bg-muted/30 ${!isActive ? "opacity-60" : ""}`}>
                     <td className="px-4 py-3 font-medium text-foreground">{profile.full_name || "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{profile.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">{profile.cpf || "—"}</td>
                     <td className="px-4 py-3 text-right tabular-nums font-medium text-foreground">{Number(profile.balance)} FC</td>
                     <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{Number(profile.total_recycled_kg)} kg</td>
