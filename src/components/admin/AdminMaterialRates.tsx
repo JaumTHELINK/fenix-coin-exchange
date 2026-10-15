@@ -8,12 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 
 interface RateForm {
   material: string;
+  examples: string;
   quantity_per_fenix: string;
   fenix_per_unit: string;
   unit: string;
 }
 
-const emptyForm: RateForm = { material: "", quantity_per_fenix: "", fenix_per_unit: "1", unit: "kg" };
+const emptyForm: RateForm = { material: "", examples: "", quantity_per_fenix: "", fenix_per_unit: "1", unit: "kg" };
 
 const AdminMaterialRates = () => {
   const { toast } = useToast();
@@ -34,6 +35,7 @@ const AdminMaterialRates = () => {
     mutationFn: async () => {
       const payload = {
         material: form.material,
+        examples: form.examples.trim(),
         quantity_per_fenix: Number(form.quantity_per_fenix),
         fenix_per_unit: Number(form.fenix_per_unit),
         unit: form.unit,
@@ -72,6 +74,7 @@ const AdminMaterialRates = () => {
   const startEdit = (r: any) => {
     setForm({
       material: r.material,
+      examples: r.examples || "",
       quantity_per_fenix: String(r.quantity_per_fenix),
       fenix_per_unit: String(r.fenix_per_unit),
       unit: r.unit,
