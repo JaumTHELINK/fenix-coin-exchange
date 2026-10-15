@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Recycle, Eye, EyeOff } from "lucide-react";
+import { CreditCard, Lock, Recycle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatCPF, cpfToLoginEmail } from "@/lib/validation";
 
 
 const translateError = (msg: string): string => {
-  if (msg.includes("Invalid login credentials")) return "Email ou senha incorretos.";
+  if (msg.includes("Invalid login credentials")) return "CPF ou senha incorretos.";
   if (msg.includes("Email not confirmed")) return "Confirme seu email antes de entrar. Verifique sua caixa de entrada.";
   if (msg.includes("Too many requests")) return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
   if (msg.includes("User not found")) return "Usuário não encontrado.";
@@ -20,7 +21,7 @@ const translateError = (msg: string): string => {
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +31,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: login.includes("@") ? login.trim() : cpfToLoginEmail(login), password });
 
     if (error) {
       toast({ title: "Erro ao entrar", description: translateError(error.message), variant: "destructive" });
@@ -89,10 +90,10 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="login">CPF</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="seu@email.com" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input id="login" inputMode="numeric" placeholder="000.000.000-00" className="pl-10" value={login} onChange={(e) => setLogin(e.target.value.includes("@") ? e.target.value : formatCPF(e.target.value))} required />
             </div>
           </div>
 

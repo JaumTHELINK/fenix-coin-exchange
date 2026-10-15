@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Phone, CreditCard, Lock, Recycle, Check, X, Eye, EyeOff } from "lucide-react";
+import { User, Phone, CreditCard, Lock, Recycle, Check, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-import { formatCPF, formatPhone, validateCPF, passwordRules } from "@/lib/validation";
+import { formatCPF, formatPhone, validateCPF, passwordRules, cpfToLoginEmail } from "@/lib/validation";
 
 
 const translateError = (msg: string): string => {
-  if (msg.includes("User already registered")) return "Este e-mail já está cadastrado. Tente fazer login.";
+  if (msg.includes("User already registered")) return "Este CPF já está cadastrado. Tente fazer login.";
   if (msg.includes("Password should be at least")) return "A senha deve ter pelo menos 6 caracteres.";
   if (msg.includes("Unable to validate email")) return "Endereço de e-mail inválido.";
   if (msg.includes("Signup requires a valid password")) return "Informe uma senha válida.";
@@ -25,7 +25,7 @@ const Register = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", cpf: "", password: "", confirmPassword: "",
+    name: "", phone: "", cpf: "", password: "", confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState({ password: false, confirmPassword: false });
@@ -41,7 +41,6 @@ const Register = () => {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Nome é obrigatório.";
-    if (!form.email.trim()) errs.email = "Email é obrigatório.";
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errs.phone = "Telefone inválido. Use (XX) XXXXX-XXXX.";
     if (!validateCPF(form.cpf)) errs.cpf = "CPF inválido.";
     if (!passwordRules.every((rule) => rule.test(form.password)))
@@ -56,27 +55,25 @@ const Register = () => {
     if (!validate()) return;
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
+    const { data, error } = await supabase.auth.signUp({
+      email: cpfToLoginEmail(form.cpf),
       password: form.password,
       options: {
         data: { full_name: form.name, phone: form.phone, cpf: form.cpf },
-        emailRedirectTo: window.location.origin,
       },
     });
 
     if (error) {
       toast({ title: "Erro ao criar conta", description: translateError(error.message), variant: "destructive" });
     } else {
-      toast({ title: "Conta criada com sucesso!", description: "Verifique seu email para confirmar o cadastro." });
-      navigate("/dashboard");
+      toast({ title: "Conta criada com sucesso!", description: "Use seu CPF e senha para entrar." });
+      navigate(data.session ? "/dashboard" : "/");
     }
     setLoading(false);
   };
 
   const fields = [
     { id: "name", label: "Nome completo *", icon: User, placeholder: "Seu nome completo", type: "text" },
-    { id: "email", label: "Email *", icon: Mail, placeholder: "seu@email.com", type: "email" },
     { id: "phone", label: "Telefone *", icon: Phone, placeholder: "(11) 99999-9999", type: "tel" },
     { id: "cpf", label: "CPF *", icon: CreditCard, placeholder: "000.000.000-00", type: "text" },
     { id: "password", label: "Senha *", icon: Lock, placeholder: "••••••", type: "password" },

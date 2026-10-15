@@ -43,3 +43,10 @@ export const passwordRules = [
 
 export const isPasswordStrong = (p: string): boolean =>
   passwordRules.every((rule) => rule.test(p));
+
+/** Login identifier: CPF (digits only) mapped to an internal, non-deliverable auth address. */
+export const CPF_LOGIN_DOMAIN = "cpf.ecoteiner.app";
+export const cpfToLoginEmail = (cpf: string): string =>
+  `${cpf.replace(/\D/g, "")}@${CPF_LOGIN_DOMAIN}`;
+export const isCpfLoginEmail = (email?: string | null): boolean =>
+  !!email && email.endsWith(`@${CPF_LOGIN_DOMAIN}`);
