@@ -208,8 +208,8 @@ const AdminUsers = () => {
                               disabled={isAdm && profile.user_id === user?.id}
                               onClick={() => {
                                 const msg = isAdm
-                                  ? `Remover o acesso de administrador de ${profile.full_name || profile.email}?`
-                                  : `Tornar ${profile.full_name || profile.email} administrador? Essa pessoa terá acesso total ao painel.`;
+                                  ? `Remover o acesso de administrador de ${profile.full_name || profile.cpf}?`
+                                  : `Tornar ${profile.full_name || profile.cpf} administrador? Essa pessoa terá acesso total ao painel.`;
                                 if (!confirm(msg)) return;
                                 toggleAdmin.mutate({ userId: profile.user_id, makeAdmin: !isAdm });
                               }}
@@ -262,7 +262,7 @@ const AdminUsers = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/20" onClick={() => setStoreFor(null)}>
           <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-card-hover" onClick={e => e.stopPropagation()}>
             <h3 className="mb-1 text-lg font-semibold text-foreground">Tornar loja parceira</h3>
-            <p className="mb-4 text-sm text-muted-foreground">{storeFor.full_name || storeFor.email}</p>
+            <p className="mb-4 text-sm text-muted-foreground">{storeFor.full_name || storeFor.cpf}</p>
             <label className="mb-1 block text-sm font-medium text-foreground">Nome da loja</label>
             <Input maxLength={100} value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="Ex.: Padaria Central" />
             <p className="mt-1 text-xs text-muted-foreground">Os demais dados da loja podem ser completados em "Lojas Parceiras" ou pelo próprio lojista.</p>
@@ -295,8 +295,7 @@ const AdminUsers = () => {
                 <Input value={editForm.cpf} onChange={e => setEditForm(f => ({ ...f, cpf: e.target.value }))} />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Email</label>
-                <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                <label className="mb-1 block text-sm font-medium text-foreground">Nova senha (deixe em branco para manter)</label>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Nova senha</label>
