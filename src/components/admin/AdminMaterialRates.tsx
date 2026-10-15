@@ -8,12 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 
 interface RateForm {
   material: string;
+  examples: string;
   quantity_per_fenix: string;
   fenix_per_unit: string;
   unit: string;
 }
 
-const emptyForm: RateForm = { material: "", quantity_per_fenix: "", fenix_per_unit: "1", unit: "kg" };
+const emptyForm: RateForm = { material: "", examples: "", quantity_per_fenix: "", fenix_per_unit: "1", unit: "kg" };
 
 const AdminMaterialRates = () => {
   const { toast } = useToast();
@@ -34,6 +35,7 @@ const AdminMaterialRates = () => {
     mutationFn: async () => {
       const payload = {
         material: form.material,
+        examples: form.examples.trim(),
         quantity_per_fenix: Number(form.quantity_per_fenix),
         fenix_per_unit: Number(form.fenix_per_unit),
         unit: form.unit,
@@ -72,6 +74,7 @@ const AdminMaterialRates = () => {
   const startEdit = (r: any) => {
     setForm({
       material: r.material,
+      examples: r.examples || "",
       quantity_per_fenix: String(r.quantity_per_fenix),
       fenix_per_unit: String(r.fenix_per_unit),
       unit: r.unit,
@@ -97,6 +100,15 @@ const AdminMaterialRates = () => {
             <Input placeholder="Fênix por unidade" type="number" value={form.fenix_per_unit} onChange={e => setForm(f => ({ ...f, fenix_per_unit: e.target.value }))} />
             <Input placeholder="Unidade (kg, und, litros)" value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))} />
           </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-foreground">Exemplos do que é aceito (opcional)</label>
+            <Input
+              placeholder="Ex: garrafas PET, sacolas, embalagens de produto de limpeza"
+              value={form.examples}
+              onChange={e => setForm(f => ({ ...f, examples: e.target.value }))}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Separe os exemplos por vírgula para deixar claro ao usuário quais tipos são aceitos.</p>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => { setShowForm(false); setEditing(null); }}>Cancelar</Button>
             <Button onClick={() => upsert.mutate()} disabled={!form.material || !form.quantity_per_fenix}>Salvar</Button>
@@ -120,7 +132,10 @@ const AdminMaterialRates = () => {
             <tbody>
               {rates.map(r => (
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                  <td className="px-4 py-3 font-medium text-foreground">{r.material}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">
+                    {r.material}
+                    {r.examples && <div className="mt-0.5 text-xs font-normal text-muted-foreground">{r.examples}</div>}
+                  </td>
                   <td className="px-4 py-3 text-right tabular-nums text-foreground">{Number(r.quantity_per_fenix)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{r.unit}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-primary font-bold">{Number(r.fenix_per_unit)} FC</td>

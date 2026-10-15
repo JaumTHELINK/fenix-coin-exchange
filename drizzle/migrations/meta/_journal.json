@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792071290492,
+      "tag": "0000_add_material_rate_examples",
+      "breakpoints": true
+    }
+  ]
+}

@@ -73,7 +73,14 @@ const PontosColeta = () => {
                 <tbody>
                   {rates.map((rate) => (
                     <tr key={rate.id} className="border-t border-border hover:bg-muted/20">
-                      <td className="px-6 py-3 font-medium text-foreground">{rate.material}</td>
+                      <td className="px-6 py-3 font-medium text-foreground">
+                        {rate.material}
+                        {rate.examples && (
+                          <div className="mt-0.5 text-xs font-normal text-muted-foreground">
+                            Aceita: {rate.examples}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-3 text-center tabular-nums text-muted-foreground">
                         {Number(rate.quantity_per_fenix)} {rate.unit}
                       </td>
