@@ -96,3 +96,10 @@ describe("regras de senha", () => {
     passwordRules.forEach((r) => expect(r.label.length).toBeGreaterThan(0));
   });
 });
+
+import { cpfToLoginEmail as _c } from "@/lib/validation";
+describe("cpfToLoginEmail", () => {
+  it("usa só os dígitos do CPF", () => {
+    expect(_c("529.982.247-25")).toBe("52998224725@cpf.ecoteiner.app");
+  });
+});
