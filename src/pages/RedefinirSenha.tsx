@@ -1,6 +1,7 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Recycle } from "lucide-react";
+import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,10 +44,7 @@ const RedefinirSenha = () => {
     <div className="flex min-h-screen items-center justify-center bg-accent p-4">
       <div className="w-full max-w-md rounded-xl bg-card p-8 shadow-card">
         <div className="mb-6 flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary">
-            <Recycle className="h-7 w-7 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Ecoteiner</h1>
+          <h1><BrandLogo /></h1>
         </div>
 
         <div className="mb-6 text-center">
