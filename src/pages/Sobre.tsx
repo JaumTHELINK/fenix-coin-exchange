@@ -1,6 +1,7 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Recycle, Mail, Phone, MapPin, Send, ArrowLeft, Leaf, Users, Target } from "lucide-react";
+import { Mail, Phone, MapPin, Send, ArrowLeft, Leaf, Users, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,10 +43,7 @@ const Sobre = () => {
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
-              <Recycle className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">Ecoteiner</span>
+            <BrandLogo className="w-36" />
           </div>
           <Link to="/">
             <Button variant="outline" size="sm">

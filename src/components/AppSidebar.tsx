@@ -1,6 +1,7 @@
+import { BrandLogo } from "@/components/BrandLogo";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingBag, MapPin, Receipt, LogOut, Recycle, Shield, Menu, X, Store } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, MapPin, Receipt, LogOut, Shield, Menu, X, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -54,10 +55,7 @@ const AppSidebar = () => {
     <>
       <div className="flex items-center justify-between px-5 py-6">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-            <Recycle className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold text-foreground">Ecoteiner</span>
+          <BrandLogo className="w-40" />
         </div>
         <button className="lg:hidden" onClick={() => setMobileOpen(false)}>
           <X className="h-5 w-5 text-muted-foreground" />
