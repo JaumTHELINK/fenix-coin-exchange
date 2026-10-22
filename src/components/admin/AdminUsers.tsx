@@ -68,6 +68,10 @@ const AdminUsers = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-profiles"] });
       toast({ title: "Status do usuário atualizado!" });
+      queryClient.invalidateQueries({ queryKey: ["available-partner-stores"] });
+      queryClient.invalidateQueries({ queryKey: ["partner-stores"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     },
     onError: (err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }),
   });

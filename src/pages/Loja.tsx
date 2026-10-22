@@ -8,10 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAvailableStores } from "@/hooks/use-available-stores";
+import { productAvailable } from "@/lib/catalog";
 
 
 const Loja = () => {
   const { user } = useAuth();
+  const { data: availableStores = [] } = useAvailableStores();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -90,8 +93,9 @@ const Loja = () => {
     enabled: !!user,
   });
 
-  const ecoteinerProducts = products.filter((p) => !p.store_id);
-  const partnerProducts = products.filter((p) => p.store_id);
+  const catalog = products.filter(p => productAvailable(p, availableStores));
+  const ecoteinerProducts = catalog.filter((p) => !p.store_id);
+  const partnerProducts = catalog.filter((p) => p.store_id);
 
   const filtered = ecoteinerProducts.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
@@ -102,6 +106,7 @@ const Loja = () => {
   const featured = filtered.filter((p) => p.featured);
 
   const storesWithProducts = partnerStores
+    .filter(store => availableStores.includes(store.id))
     .filter((store) => store.owner_id !== user?.id)
     .map((store) => ({
       store,
