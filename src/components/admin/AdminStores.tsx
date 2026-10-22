@@ -133,8 +133,10 @@ const AdminStores = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-stores-all"] });
       queryClient.invalidateQueries({ queryKey: ["partner-stores"] });
-      toast({ title: "Status atualizado!" });
+      queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
+      toast({ title: "Status atualizado!", description: "O acesso de lojista acompanha a ativação da loja. A conta de usuário é mantida." });
     },
+    onError: (err: Error) => toast({ title: "Não foi possível alterar a loja", description: err.message, variant: "destructive" }),
   });
 
   const resetForm = () => {
