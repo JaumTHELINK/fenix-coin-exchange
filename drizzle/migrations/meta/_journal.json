@@ -36,6 +36,13 @@
       "when": 1792688090928,
       "tag": "0004_hide_unavailable_partner_products",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792688158168,
+      "tag": "0005_grant_store_availability_service_access",
+      "breakpoints": true
     }
   ]
 }
