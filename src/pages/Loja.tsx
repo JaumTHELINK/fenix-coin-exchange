@@ -29,8 +29,9 @@ const Loja = () => {
   const balance = Number(profile?.balance ?? 0);
 
   const redeem = useMutation({
-    mutationFn: async (productId: string) => {
-      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId, _quantity: 1 });
+    mutationFn: async (product: ProductType) => {
+      const rpc = product.store_id ? "redeem_store_product" : "redeem_system_product";
+      const { data, error } = await (supabase.rpc as any)(rpc, { _product_id: product.id, _quantity: 1 });
       if (error) throw error;
       return data;
     },
@@ -53,7 +54,7 @@ const Loja = () => {
       return;
     }
     if (!confirm(`Resgatar "${product.name}" por ${Number(product.price_fc)} FC?`)) return;
-    redeem.mutate(product.id);
+    redeem.mutate(product);
   };
 
   const { data: dbCategories = [] } = useQuery({
@@ -152,7 +153,12 @@ const Loja = () => {
           <h2 className="mb-4 text-lg font-semibold text-foreground">Produtos em Destaque</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onRedeem={() => handleRedeem(product)}
+                redeeming={redeem.isPending}
+              />
             ))}
           </div>
         </section>
@@ -162,7 +168,12 @@ const Loja = () => {
         <h2 className="mb-4 text-lg font-semibold text-foreground">Todos os Produtos</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onRedeem={() => handleRedeem(product)}
+              redeeming={redeem.isPending}
+            />
           ))}
         </div>
         {filtered.length === 0 && (
@@ -219,7 +230,7 @@ const Loja = () => {
           <div>
             <p className="font-semibold text-accent-foreground">Como funciona?</p>
             <p className="text-sm text-accent-foreground/80">
-              Os produtos mostrados aqui são informativos. Para realizar trocas e ganhar Fênix Coins, visite um dos nossos pontos de coleta com seus materiais recicláveis.
+              Você pode resgatar os produtos com seus Fênix Coins. Para ganhar moedas, visite um dos nossos pontos de coleta com seus materiais recicláveis.
             </p>
           </div>
         </div>
@@ -237,6 +248,7 @@ interface ProductType {
   image_url: string | null;
   featured: boolean;
   stock?: number | null;
+  store_id?: string | null;
 }
 
 const ProductCard = ({
