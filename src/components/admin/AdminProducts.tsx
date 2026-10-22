@@ -16,9 +16,10 @@ interface ProductForm {
   category: string;
   featured: boolean;
   image_url: string;
+  stock: string;
 }
 
-const emptyForm: ProductForm = { name: "", description: "", price_fc: "", category: "geral", featured: false, image_url: "" };
+const emptyForm: ProductForm = { name: "", description: "", price_fc: "", category: "geral", featured: false, image_url: "", stock: "" };
 
 const AdminProducts = () => {
   const { toast } = useToast();
@@ -122,6 +123,9 @@ const AdminProducts = () => {
 
   const upsert = useMutation({
     mutationFn: async () => {
+      const stock = form.stock.trim() === "" ? null : Number(form.stock);
+      if (stock !== null && (!Number.isSafeInteger(stock) || stock < 0)) throw new Error("Informe um estoque inteiro maior ou igual a zero.");
+      if (!Number.isFinite(Number(form.price_fc)) || Number(form.price_fc) < 0) throw new Error("Preço inválido.");
       const payload = {
         name: form.name,
         description: form.description,
@@ -129,6 +133,7 @@ const AdminProducts = () => {
         category: form.category,
         featured: form.featured,
         image_url: form.image_url || null,
+        stock,
       };
       if (editing) {
         const { error } = await supabase.from("products").update(payload).eq("id", editing);
@@ -163,7 +168,7 @@ const AdminProducts = () => {
   });
 
   const startEdit = (p: any) => {
-    setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), category: p.category, featured: p.featured, image_url: p.image_url || "" });
+    setForm({ name: p.name, description: p.description || "", price_fc: String(p.price_fc), category: p.category, featured: p.featured, image_url: p.image_url || "", stock: p.stock == null ? "" : String(p.stock) });
     setPreviewUrl(p.image_url || null);
     setEditing(p.id);
     setShowForm(true);
@@ -202,6 +207,7 @@ const AdminProducts = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <Input placeholder="Nome" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
             <Input placeholder="Preço (FC)" type="number" value={form.price_fc} onChange={e => setForm(f => ({ ...f, price_fc: e.target.value }))} />
+            <Input aria-label="Estoque" placeholder="Estoque (vazio = ilimitado)" type="number" min="0" step="1" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: e.target.value }))} />
             <div className="space-y-2">
               <Select value={form.category} onValueChange={v => {
                 if (v === "__new__") {

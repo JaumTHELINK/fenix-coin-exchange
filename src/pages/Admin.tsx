@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Link, useLocation } from "react-router-dom";
-import { Users, ShoppingBag, MapPin, Receipt, BarChart3, Settings, Coins, Megaphone, Mail, Store, Activity } from "lucide-react";
+import { Users, ShoppingBag, MapPin, Receipt, BarChart3, Settings, Coins, Megaphone, Mail, Store, Activity, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminProducts from "@/components/admin/AdminProducts";
@@ -13,10 +13,12 @@ import AdminMaterialRates from "@/components/admin/AdminMaterialRates";
 import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminContacts from "@/components/admin/AdminContacts";
 import AdminMonitoring from "@/components/admin/AdminMonitoring";
+import AdminOrders from "@/components/admin/AdminOrders";
 
 const tabs = [
   { id: "users", label: "Usuários", icon: Users },
   { id: "products", label: "Produtos", icon: ShoppingBag },
+  { id: "orders", label: "Pedidos", icon: ClipboardList },
   { id: "stores", label: "Lojas Parceiras", icon: Store },
   { id: "rates", label: "Taxas de Material", icon: Coins },
   { id: "points", label: "Pontos de Coleta", icon: MapPin },
@@ -75,6 +77,7 @@ const Admin = () => {
       {/* Tab Content */}
       {activeTab === "users" && <AdminUsers />}
       {activeTab === "products" && <AdminProducts />}
+      {activeTab === "orders" && <AdminOrders />}
       {activeTab === "stores" && <AdminStores />}
       {activeTab === "rates" && <AdminMaterialRates />}
       {activeTab === "points" && <AdminCollectionPoints />}

@@ -15,6 +15,13 @@
       "when": 1792685396101,
       "tag": "0001_add_redeem_system_product",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792686133047,
+      "tag": "0002_system_product_orders",
+      "breakpoints": true
     }
   ]
 }

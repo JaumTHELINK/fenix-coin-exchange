@@ -466,6 +466,59 @@ export type Database = {
         }
         Relationships: []
       }
+      system_orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          status: Database["public"]["Enums"]["order_status"]
+          total_fc: number
+          unit_price_fc: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          product_id?: string | null
+          product_name: string
+          quantity: number
+          status?: Database["public"]["Enums"]["order_status"]
+          total_fc: number
+          unit_price_fc: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          total_fc?: number
+          unit_price_fc?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
@@ -551,6 +604,13 @@ export type Database = {
       owns_store: {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
+      }
+      process_system_order: {
+        Args: {
+          _order_id: string
+          _status: Database["public"]["Enums"]["order_status"]
+        }
+        Returns: Json
       }
       redeem_store_product: {
         Args: { _product_id: string; _quantity?: number }
