@@ -6,6 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useAvailableStores } from "@/hooks/use-available-stores";
+import { productAvailable } from "@/lib/catalog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +22,7 @@ import {
 const ProductDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const { data: availableStores = [], isLoading: availabilityLoading } = useAvailableStores();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [quantity, setQuantity] = useState(1);
@@ -80,7 +83,7 @@ const ProductDetail = () => {
   const maxQty = stock === null ? 100 : Math.min(100, stock);
 
   const handleConfirmRedeem = () => {
-    if (!product) return;
+    if (!product || !productAvailable(product, availableStores)) return;
     if (outOfStock) {
       toast({ title: "Produto esgotado", description: "Este produto não tem estoque disponível.", variant: "destructive" });
       return;
@@ -96,7 +99,7 @@ const ProductDetail = () => {
     setConfirmOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading || availabilityLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -104,7 +107,7 @@ const ProductDetail = () => {
     );
   }
 
-  if (!product) {
+  if (!product || !productAvailable(product, availableStores)) {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Produto não encontrado.</p>

@@ -134,6 +134,9 @@ const AdminStores = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-stores-all"] });
       queryClient.invalidateQueries({ queryKey: ["partner-stores"] });
       queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
+      queryClient.invalidateQueries({ queryKey: ["available-partner-stores"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
       toast({ title: "Status atualizado!", description: "O acesso de lojista acompanha a ativação da loja. A conta de usuário é mantida." });
     },
     onError: (err: Error) => toast({ title: "Não foi possível alterar a loja", description: err.message, variant: "destructive" }),
