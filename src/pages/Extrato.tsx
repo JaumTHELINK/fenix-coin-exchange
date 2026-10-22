@@ -112,6 +112,7 @@ const Extrato = () => {
               <option>Reciclagem</option>
               <option>Troca</option>
               <option>Bônus</option>
+              <option>Resgate</option>
             </select>
           </div>
           <div className="flex flex-col gap-1">
