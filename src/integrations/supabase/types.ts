@@ -590,6 +590,7 @@ export type Database = {
     }
     Functions: {
       _compute_db_metrics: { Args: never; Returns: Json }
+      available_partner_store_ids: { Args: never; Returns: string[] }
       cancel_store_order: { Args: { _order_id: string }; Returns: Json }
       cleanup_old_orders: { Args: never; Returns: number }
       get_db_metrics: { Args: never; Returns: Json }
@@ -601,6 +602,7 @@ export type Database = {
         Returns: boolean
       }
       is_fifth_business_day: { Args: { _d: string }; Returns: boolean }
+      is_store_available: { Args: { _store_id: string }; Returns: boolean }
       owns_store: {
         Args: { _store_id: string; _user_id: string }
         Returns: boolean
