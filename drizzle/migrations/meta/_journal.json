@@ -22,6 +22,13 @@
       "when": 1792686133047,
       "tag": "0002_system_product_orders",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792687598309,
+      "tag": "0003_sync_store_merchant_access",
+      "breakpoints": true
     }
   ]
 }
