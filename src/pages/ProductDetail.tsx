@@ -54,8 +54,9 @@ const ProductDetail = () => {
   });
 
   const redeem = useMutation({
-    mutationFn: async ({ productId, qty }: { productId: string; qty: number }) => {
-      const { data, error } = await supabase.rpc("redeem_store_product", { _product_id: productId, _quantity: qty });
+    mutationFn: async ({ productId, qty, storeProduct }: { productId: string; qty: number; storeProduct: boolean }) => {
+      const rpc = storeProduct ? "redeem_store_product" : "redeem_system_product";
+      const { data, error } = await (supabase.rpc as any)(rpc, { _product_id: productId, _quantity: qty });
       if (error) throw error;
       return data;
     },
@@ -113,6 +114,7 @@ const ProductDetail = () => {
   }
 
   const isPartnerProduct = !!product.store_id && store?.owner_id !== user?.id;
+  const redeemable = isPartnerProduct || !product.store_id;
 
   return (
     <div className="space-y-6">
@@ -157,7 +159,7 @@ const ProductDetail = () => {
               Políticas de garantia e troca de produtos
             </p>
 
-            {isPartnerProduct && !redeemed && (
+            {redeemable && !redeemed && (
               <div className="mt-4 space-y-4">
                 {stock !== null && (
                   <p className={`text-sm font-medium ${outOfStock ? "text-destructive" : "text-muted-foreground"}`}>
@@ -202,7 +204,7 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {isPartnerProduct && redeemed && (
+            {redeemable && redeemed && (
               <div className="mt-4 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
                 <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
                 <div>
@@ -238,7 +240,7 @@ const ProductDetail = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => redeem.mutate({ productId: product.id, qty: quantity })}>
+            <AlertDialogAction onClick={() => redeem.mutate({ productId: product.id, qty: quantity, storeProduct: !!product.store_id })}>
               Confirmar resgate
             </AlertDialogAction>
           </AlertDialogFooter>
