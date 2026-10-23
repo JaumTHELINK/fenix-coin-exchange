@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-import { formatCPF, formatPhone, validateCPF, passwordRules, cpfToLoginEmail } from "@/lib/validation";
+import { formatDocument, formatPhone, validateDocument, passwordRules, cpfToLoginEmail } from "@/lib/validation";
 
 
 const translateError = (msg: string): string => {
-  if (msg.includes("User already registered")) return "Este CPF já está cadastrado. Tente fazer login.";
+  if (msg.includes("User already registered")) return "Este CPF/CNPJ já está cadastrado. Tente fazer login.";
   if (msg.includes("Password should be at least")) return "A senha deve ter pelo menos 6 caracteres.";
   if (msg.includes("Unable to validate email")) return "Endereço de e-mail inválido.";
   if (msg.includes("Signup requires a valid password")) return "Informe uma senha válida.";
@@ -33,7 +33,7 @@ const Register = () => {
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-    if (field === "cpf") value = formatCPF(value);
+    if (field === "cpf") value = formatDocument(value);
     if (field === "phone") value = formatPhone(value);
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -43,7 +43,7 @@ const Register = () => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Nome é obrigatório.";
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 10) errs.phone = "Telefone inválido. Use (XX) XXXXX-XXXX.";
-    if (!validateCPF(form.cpf)) errs.cpf = "CPF inválido.";
+    if (!validateDocument(form.cpf)) errs.cpf = "CPF ou CNPJ inválido.";
     if (!passwordRules.every((rule) => rule.test(form.password)))
       errs.password = "A senha não atende a todos os requisitos.";
     if (form.password !== form.confirmPassword) errs.confirmPassword = "As senhas não coincidem.";
@@ -67,7 +67,7 @@ const Register = () => {
     if (error) {
       toast({ title: "Erro ao criar conta", description: translateError(error.message), variant: "destructive" });
     } else {
-      toast({ title: "Conta criada com sucesso!", description: "Use seu CPF e senha para entrar." });
+      toast({ title: "Conta criada com sucesso!", description: "Use seu CPF/CNPJ e senha para entrar." });
       navigate(data.session ? "/dashboard" : "/");
     }
     setLoading(false);
@@ -76,7 +76,7 @@ const Register = () => {
   const fields = [
     { id: "name", label: "Nome completo *", icon: User, placeholder: "Seu nome completo", type: "text" },
     { id: "phone", label: "Telefone *", icon: Phone, placeholder: "(11) 99999-9999", type: "tel" },
-    { id: "cpf", label: "CPF *", icon: CreditCard, placeholder: "000.000.000-00", type: "text" },
+    { id: "cpf", label: "CPF ou CNPJ *", icon: CreditCard, placeholder: "CPF ou CNPJ", type: "text" },
     { id: "password", label: "Senha *", icon: Lock, placeholder: "••••••", type: "password" },
     { id: "confirmPassword", label: "Confirmar senha *", icon: Lock, placeholder: "••••••••", type: "password" },
   ];

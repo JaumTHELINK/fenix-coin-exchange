@@ -103,3 +103,15 @@ describe("cpfToLoginEmail", () => {
     expect(_c("529.982.247-25")).toBe("52998224725@cpf.ecoteiner.app");
   });
 });
+
+import { validateCNPJ, formatDocument, validateDocument } from "@/lib/validation";
+describe("CNPJ", () => {
+  it("accepts a valid CNPJ", () => expect(validateCNPJ("11.222.333/0001-81")).toBe(true));
+  it("rejects wrong check digits", () => expect(validateCNPJ("11.222.333/0001-82")).toBe(false));
+  it("rejects repeated digits", () => expect(validateCNPJ("11111111111111")).toBe(false));
+  it("formats 14 digits as CNPJ", () => expect(formatDocument("11222333000181")).toBe("11.222.333/0001-81"));
+  it("validateDocument handles both", () => {
+    expect(validateDocument("11222333000181")).toBe(true);
+    expect(validateDocument("529.982.247-25")).toBe(true);
+  });
+});
