@@ -44,9 +44,39 @@ export const passwordRules = [
 export const isPasswordStrong = (p: string): boolean =>
   passwordRules.every((rule) => rule.test(p));
 
-/** Login identifier: CPF (digits only) mapped to an internal, non-deliverable auth address. */
+export const formatCNPJ = (value: string) => {
+  const d = value.replace(/\D/g, "").slice(0, 14);
+  return d
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+};
+
+export const validateCNPJ = (cnpj: string): boolean => {
+  const d = cnpj.replace(/\D/g, "");
+  if (d.length !== 14 || /^(\d)\1+$/.test(d)) return false;
+  const calc = (len: number) => {
+    const weights = len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const sum = weights.reduce((acc, w, i) => acc + parseInt(d[i]) * w, 0);
+    const r = sum % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  return calc(12) === parseInt(d[12]) && calc(13) === parseInt(d[13]);
+};
+
+/** Formats as CPF up to 11 digits, CNPJ beyond that. */
+export const formatDocument = (value: string) =>
+  value.replace(/\D/g, "").length > 11 ? formatCNPJ(value) : formatCPF(value);
+
+export const validateDocument = (value: string): boolean => {
+  const len = value.replace(/\D/g, "").length;
+  return len === 14 ? validateCNPJ(value) : validateCPF(value);
+};
+
+/** Login identifier: CPF/CNPJ (digits only) mapped to an internal, non-deliverable auth address. */
 export const CPF_LOGIN_DOMAIN = "cpf.ecoteiner.app";
-export const cpfToLoginEmail = (cpf: string): string =>
-  `${cpf.replace(/\D/g, "")}@${CPF_LOGIN_DOMAIN}`;
+export const cpfToLoginEmail = (doc: string): string =>
+  `${doc.replace(/\D/g, "")}@${CPF_LOGIN_DOMAIN}`;
 export const isCpfLoginEmail = (email?: string | null): boolean =>
   !!email && email.endsWith(`@${CPF_LOGIN_DOMAIN}`);

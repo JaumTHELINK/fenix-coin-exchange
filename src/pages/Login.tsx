@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { formatCPF, cpfToLoginEmail } from "@/lib/validation";
+import { formatDocument, cpfToLoginEmail } from "@/lib/validation";
 
 
 const translateError = (msg: string): string => {
-  if (msg.includes("Invalid login credentials")) return "CPF ou senha incorretos.";
+  if (msg.includes("Invalid login credentials")) return "CPF/CNPJ ou senha incorretos.";
   if (msg.includes("Email not confirmed")) return "Confirme seu email antes de entrar. Verifique sua caixa de entrada.";
   if (msg.includes("Too many requests")) return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
   if (msg.includes("User not found")) return "Usuário não encontrado.";
@@ -88,10 +88,10 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="login">CPF</Label>
+            <Label htmlFor="login">CPF ou CNPJ</Label>
             <div className="relative">
               <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="login" inputMode="numeric" placeholder="000.000.000-00" className="pl-10" value={login} onChange={(e) => setLogin(e.target.value.includes("@") ? e.target.value : formatCPF(e.target.value))} required />
+              <Input id="login" inputMode="numeric" placeholder="CPF ou CNPJ" className="pl-10" value={login} onChange={(e) => setLogin(e.target.value.includes("@") ? e.target.value : formatDocument(e.target.value))} required />
             </div>
           </div>
 
